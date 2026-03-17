@@ -7,4 +7,4 @@ function auth(req, res, next) {
 }
 
 
-module.exports = authentification()
+module.exports = auth;
