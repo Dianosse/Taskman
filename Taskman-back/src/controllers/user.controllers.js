@@ -29,7 +29,23 @@ async function getUserById(req, res) {
     }
 }
 
+async function getInfos(req, res) {
+
+}
+
+
+async function changeInfosUserById(req, res) {
+
+}
+
+async function deleteUserById(req, res) {
+
+}
+
 module.exports = {
     allUsers,
-    getUserById
+    getUserById,
+    getInfos,
+    changeInfosUserById,
+    deleteUserById
 };

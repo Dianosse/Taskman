@@ -6,10 +6,11 @@ const helmet = require('helmet');
 require('dotenv').config();
 
 const log = require('./src/middlewares/log');
-const auth = require('./src/middlewares/auth')
+const protect = require('./src/middlewares/auth');
 
 /* routeurs */
-const userRoutes = require('./src/routes/user.routes')
+const userRoutes = require('./src/routes/user.routes');
+const authRoutes = require('./src/routes/auth.route');
 
 /* initialization */
 const app = express();
@@ -21,14 +22,17 @@ app.use(helmet());
 
 app.use(express.json());
 
-
+/* routes puliques*/
 app.get("/", (req, res) => {
     res.json({
         message : "API active"
     });
 });
+app.use('/auth', authRoutes);
 
-/* routes */
+
+/* routes avec auth */
+app.use(protect);
 app.use('/users', userRoutes);
 
 app.listen(PORT, () => {
