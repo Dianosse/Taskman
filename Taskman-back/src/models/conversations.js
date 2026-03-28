@@ -36,7 +36,7 @@ const Conversations = db.define('conversations', {
     unique: "uq_conv"
   }
 }, {
-  sequelize,
+  db,
   tableName: 'conversations',
   schema: 'public',
   timestamps: false,

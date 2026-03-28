@@ -21,7 +21,7 @@ const Favoris = db.define('favoris', {
     }
   }
 }, {
-  sequelize,
+  db,
   tableName: 'favoris',
   schema: 'public',
   timestamps: false,

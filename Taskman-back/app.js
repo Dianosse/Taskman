@@ -9,8 +9,10 @@ const log = require('./src/middlewares/log');
 const protect = require('./src/middlewares/auth');
 
 /* routeurs */
-const userRoutes = require('./src/routes/user.routes');
+const userRoutes = require('./src/routes/user.route');
 const authRoutes = require('./src/routes/auth.route');
+const annoncesRoutes = require('./src/routes/annonce.route');
+const favorisRoutes = require('./src/routes/favoris.route');
 
 /* initialization */
 const app = express();
@@ -30,10 +32,12 @@ app.get("/", (req, res) => {
 });
 app.use('/auth', authRoutes);
 
+app.use('/annonces', annoncesRoutes);
 
 /* routes avec auth */
 app.use(protect);
 app.use('/users', userRoutes);
+app.use('/favoris', favorisRoutes)
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

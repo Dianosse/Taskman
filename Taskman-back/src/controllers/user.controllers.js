@@ -11,7 +11,7 @@ async function allUsers(req, res) {
             }
         });
     } catch (error) {
-        console.error(error)
+        res.status(400).json(err);
     }
 }
 
@@ -32,7 +32,7 @@ async function getUserById(req, res) {
             }
         });
     } catch (error) {
-        console.error(error);
+        res.status(400).json(err);
     }
 }
 

@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize")
 const db = require('../config/database')
+const { Sequelize } = require("sequelize");
 
 const Annonces = db.define('annonces', {
   id: {
@@ -63,7 +64,7 @@ const Annonces = db.define('annonces', {
     }
   }
 }, {
-  sequelize,
+  db,
   tableName: 'annonces',
   schema: 'public',
   timestamps: false,
