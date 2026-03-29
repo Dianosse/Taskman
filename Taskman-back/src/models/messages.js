@@ -33,6 +33,8 @@ const Messages = db.define('messages', {
   tableName: 'messages',
   schema: 'public',
   timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: false,
   indexes: [
     {
       name: "pk_messages",

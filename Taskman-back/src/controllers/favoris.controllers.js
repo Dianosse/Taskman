@@ -6,7 +6,9 @@ async function allFavoris(req, res) {
     try {
         let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
 
-        const user = await usersModels.findByPk(token_decoded.userId);
+        let id_creator = token_decoded.userId;
+
+        const user = await usersModels.findByPk(id_creator);
 
         if (!user) {
             return res.status(401).json({
@@ -15,7 +17,7 @@ async function allFavoris(req, res) {
             });
         }
 
-        let id_creator = token_decoded.userId;
+
 
         const allFavoris = await favorisModels.findAll({
             where: {
@@ -39,7 +41,9 @@ async function addFavoris(req, res) {
     try {
         let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
 
-        const user = await usersModels.findByPk(token_decoded.userId);
+        let id_user = token_decoded.userId;
+
+        const user = await usersModels.findByPk(id_user);
 
         if (!user) {
             return res.status(401).json({
@@ -48,7 +52,6 @@ async function addFavoris(req, res) {
             });
         }
 
-        const id_user = token_decoded.userId;
         const id_annonce = req.params.id;
 
         const favoris = await favorisModels.create({
@@ -72,7 +75,9 @@ async function deleteFavoris(req, res) {
     try {
         let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
 
-        const user = await usersModels.findByPk(token_decoded.userId);
+        let id_user = token_decoded.userId;
+
+        const user = await usersModels.findByPk(id_user);
 
         if (!user) {
             return res.status(401).json({
@@ -81,7 +86,6 @@ async function deleteFavoris(req, res) {
             });
         }
 
-        const id_user = token_decoded.userId;
         const id_annonce = req.params.id;
 
         const favoris = await favorisModels.findOne({
