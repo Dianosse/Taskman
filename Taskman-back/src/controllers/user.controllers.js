@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const usersModels = require('../models/users');
+const annonceModels = require('../models/annonces');
 
 async function allUsers(req, res) {
     try {
@@ -38,7 +39,6 @@ async function getUserById(req, res) {
 
 async function getInfos(req, res) {
     try {
-
         let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
 
         const user = await usersModels.findByPk(token_decoded.userId);
@@ -122,10 +122,41 @@ async function deleteUserById(req, res) {
     }
 }
 
+async function getMesAnnonces(req, res) {
+    try {
+        let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
+
+        const user = await usersModels.findByPk(token_decoded.userId);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                error: 'L\'utilisateur n\'existe pas'
+            });
+        }
+
+        const mesAnnonces = await annonceModels.findAll({
+            where : {
+                id_creator : user.id
+            }
+        });
+
+        res.json({
+            success: true,
+            data : {
+                mesAnnonces
+            }
+        });
+    } catch (err) {
+        res.status(400).json(err);
+    }
+}
+
 module.exports = {
     allUsers,
     getUserById,
     getInfos,
     changeInfosUserById,
-    deleteUserById
+    deleteUserById,
+    getMesAnnonces
 };

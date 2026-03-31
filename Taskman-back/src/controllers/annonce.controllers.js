@@ -153,11 +153,92 @@ async function deleteAnnonce(req, res) {
     }
 }
 
+async function changeAnnonceStatus(req, res) {
+    try {
+        const annonce_id = req.params.id;
+
+        const annonce = await annoncesModels.findByPk(annonce_id);
+
+        if(!annonce) {
+            return res.status(401).json({
+                success: false,
+                error: 'L\'annonce n\'existe pas'
+            });
+        }
+
+        let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
+
+        const user = await usersModels.findByPk(token_decoded.userId);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                error: 'L\'utilisateur n\'existe pas'
+            });
+        }
+
+        let id_creator = token_decoded.userId;
+
+        if (annonce.id_creator !== id_creator) {
+            return res.status(400).json({
+                success: false,
+                error: "cette annonce n'appartient pas à cette utilisateur"
+            });
+        }
+
+        const {status} = req.body;
+
+        if (!(status.localeCompare("DRAFT") === 0 || status.localeCompare("PUBLISHED") === 0)) {
+            return res.status(400).json({
+                success: false,
+                error: "Status impossible"
+            });
+        }
+
+        console.log(status);
+
+        await annonce.update({
+            status
+        });
+
+        res.json({
+            success: true,
+            data : {
+                annonce
+            }
+        });
+
+    } catch (err) {
+        res.status(400).json(err);
+    }
+}
+
+async function allAnnoncesPublished(req, res) {
+    try {
+        const allAnnoncesPublished = await annoncesModels.findAll({
+            where : {
+                status : "PUBLISHED"
+            }
+        });
+
+        res.json({
+            success: true,
+            data : {
+                allAnnoncesPublished
+            }
+        });
+    } catch (err) {
+        res.status(400).json(err);
+    }
+}
+
 
 module.exports = {
     allAnnonces,
     getAnnonceById,
     createAnnonce,
     modifyAnnonce,
-    deleteAnnonce
+    deleteAnnonce,
+    changeAnnonceStatus,
+    allAnnoncesPublished
 };

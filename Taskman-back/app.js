@@ -32,8 +32,8 @@ app.get("/", (req, res) => {
         message : "API active"
     });
 });
-app.use('/auth', authRoutes);
 
+app.use('/auth', authRoutes);
 app.use('/annonces', annoncesRoutes);
 
 /* routes avec auth */

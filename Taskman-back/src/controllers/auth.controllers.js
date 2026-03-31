@@ -95,7 +95,21 @@ async function loginUser(req, res) {
     }
 }
 
+async function logoutUser(req, res) {
+    try{
+        res.json({
+            success: true,
+            data : {
+                message: "Utilisateur déconnecté avec succès"
+            }
+        });
+    } catch (error) {
+        res.status(400).json(error);
+    }
+}
+
 module.exports = {
     registerUser,
-    loginUser
+    loginUser,
+    logoutUser
 };
