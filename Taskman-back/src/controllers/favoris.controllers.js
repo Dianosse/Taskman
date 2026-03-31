@@ -1,27 +1,11 @@
 const favorisModels = require('../models/favoris');
-const usersModels = require("../models/users");
-const jwt = require("jsonwebtoken");
+const annonceModels = require('../models/annonces')
 
 async function allFavoris(req, res) {
     try {
-        let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
-
-        let id_creator = token_decoded.userId;
-
-        const user = await usersModels.findByPk(id_creator);
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: 'L\'utilisateur n\'existe pas'
-            });
-        }
-
-
-
         const allFavoris = await favorisModels.findAll({
             where: {
-                id_user: id_creator
+                id_user: req.user.id
             }
         });
 
@@ -39,20 +23,29 @@ async function allFavoris(req, res) {
 
 async function addFavoris(req, res) {
     try {
-        let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
+        const id_user = req.user.id;
+        const id_annonce = req.params.id;
 
-        let id_user = token_decoded.userId;
-
-        const user = await usersModels.findByPk(id_user);
-
-        if (!user) {
-            return res.status(401).json({
+        const annonce = await annonceModels.findByPk(id_annonce);
+        if (!annonce) {
+            return res.status(403).json({
                 success: false,
-                error: 'L\'utilisateur n\'existe pas'
+                error: 'L\'annonce n\'existe pas'
             });
         }
 
-        const id_annonce = req.params.id;
+        const fav = await favorisModels.findOne({
+            where : {
+                id_user,
+                id_annonce
+            }
+        });
+        if(fav) {
+            return res.status(403).json({
+                success: false,
+                error: 'Cette annonce est déjà en favoris pour cet utilisateur'
+            });
+        }
 
         const favoris = await favorisModels.create({
             id_user,
@@ -73,19 +66,7 @@ async function addFavoris(req, res) {
 
 async function deleteFavoris(req, res) {
     try {
-        let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
-
-        let id_user = token_decoded.userId;
-
-        const user = await usersModels.findByPk(id_user);
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: 'L\'utilisateur n\'existe pas'
-            });
-        }
-
+        const id_user = req.user.id;
         const id_annonce = req.params.id;
 
         const favoris = await favorisModels.findOne({

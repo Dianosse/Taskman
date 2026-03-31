@@ -38,11 +38,14 @@ async function registerUser(req, res) {
 
         const token = jwtUtils.generateToken(user.id);
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             token,
             data : {
-                user
+                id : user.id,
+                email : user.email,
+                username : user.username,
+                bio : user.bio
             }
         });
 
@@ -55,8 +58,6 @@ async function loginUser(req, res) {
     try {
         const {email, password} = req.body;
 
-        console.log(email, password);
-
         const userExistant = await userModel.findOne({
             where :
                 {
@@ -65,7 +66,7 @@ async function loginUser(req, res) {
         });
 
         if (userExistant === null) {
-            res.status(404).json({
+            return res.status(404).json({
                 success: false,
                 error: 'Utilisateur non trouvé'
             });
@@ -74,7 +75,7 @@ async function loginUser(req, res) {
         const match = await passwordUtils.comparePassword(userExistant.password_hash, password);
 
         if (!match) {
-            res.status(401).json({
+            return res.status(401).json({
                 success: false,
                 error: 'Mauvais mot de passe'
             });
@@ -82,11 +83,14 @@ async function loginUser(req, res) {
 
         const token = jwtUtils.generateToken(userExistant.id);
 
-        res.json({
+        return res.json({
             success: true,
             token,
             data : {
-                userExistant
+                id : userExistant.id,
+                email : userExistant.email,
+                username : userExistant.username,
+                bio : userExistant.bio
             }
         });
 

@@ -1,20 +1,6 @@
-const jwt = require("jsonwebtoken");
 const usersModels = require('../models/users');
 const annonceModels = require('../models/annonces');
 
-async function allUsers(req, res) {
-    try {
-        const allUsers = await usersModels.findAll();
-        res.json({
-            success: true,
-            data : {
-                allUsers
-            }
-        });
-    } catch (error) {
-        res.status(400).json(err);
-    }
-}
 
 async function getUserById(req, res) {
     try {
@@ -29,35 +15,28 @@ async function getUserById(req, res) {
         res.json({
             success: true,
             data : {
-                user
+                id : user.id,
+                email : user.email,
+                username : user.username,
+                bio : user.bio
             }
         });
     } catch (error) {
-        res.status(400).json(err);
+        res.status(400).json(error);
     }
 }
 
 async function getInfos(req, res) {
     try {
-        let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
-
-        const user = await usersModels.findByPk(token_decoded.userId);
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: 'L\'utilisateur n\'existe pas'
-            });
-        }
-
         res.json({
             success: true,
             data : {
-                user
+                id : req.user.id,
+                email : req.user.email,
+                username : req.user.username,
+                bio : req.user.bio
             }
         });
-
-
     } catch (err) {
         res.status(400).json(err);
     }
@@ -66,7 +45,15 @@ async function getInfos(req, res) {
 
 async function changeInfosUserById(req, res) {
     try {
-        let id_user = req.params.id;
+        const id_user = req.params.id;
+        const id_user_int = parseInt(req.params.id);
+
+        if (req.user.id !==  id_user_int) {
+            return res.status(401).json({
+                success: false,
+                error: 'Impossible de modifier un autre utilisateur que soit même'
+            });
+        }
 
         const user = await usersModels.findByPk(id_user);
 
@@ -89,7 +76,10 @@ async function changeInfosUserById(req, res) {
         res.json({
             success: true,
             data : {
-                user
+                id : user.id,
+                email : user.email,
+                username : user.username,
+                bio : user.bio
             }
         });
 
@@ -100,7 +90,15 @@ async function changeInfosUserById(req, res) {
 
 async function deleteUserById(req, res) {
     try {
-        let user_id = req.params.id;
+        const user_id = req.params.id;
+        const id_user_int = parseInt(req.params.id);
+
+        if (req.user.id !== id_user_int) {
+            return res.status(401).json({
+                success: false,
+                error: 'Impossible de supprimer un autre utilisateur que soit même'
+            });
+        }
 
         const user = await usersModels.findByPk(user_id);
 
@@ -124,20 +122,9 @@ async function deleteUserById(req, res) {
 
 async function getMesAnnonces(req, res) {
     try {
-        let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
-
-        const user = await usersModels.findByPk(token_decoded.userId);
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: 'L\'utilisateur n\'existe pas'
-            });
-        }
-
         const mesAnnonces = await annonceModels.findAll({
             where : {
-                id_creator : user.id
+                id_creator : req.user.id
             }
         });
 
@@ -153,7 +140,6 @@ async function getMesAnnonces(req, res) {
 }
 
 module.exports = {
-    allUsers,
     getUserById,
     getInfos,
     changeInfosUserById,

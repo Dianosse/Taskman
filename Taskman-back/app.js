@@ -14,7 +14,6 @@ const authRoutes = require('./src/routes/auth.route');
 const annoncesRoutes = require('./src/routes/annonce.route');
 const favorisRoutes = require('./src/routes/favoris.route');
 const conversationsRoutes = require('./src/routes/conversations.route');
-const messageRoutes = require('./src/routes/messages.route');
 
 /* initialization */
 const app = express();
@@ -41,7 +40,6 @@ app.use(protect);
 app.use('/users', userRoutes);
 app.use('/favoris', favorisRoutes);
 app.use('/conversations', conversationsRoutes);
-app.use('/messages', messageRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

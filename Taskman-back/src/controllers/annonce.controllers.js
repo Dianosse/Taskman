@@ -1,6 +1,4 @@
 const annoncesModels = require('../models/annonces');
-const jwt = require("jsonwebtoken");
-const usersModels = require("../models/users");
 const { Op } = require("sequelize");
 
 async function allAnnonces(req, res) {
@@ -59,7 +57,7 @@ async function allAnnonces(req, res) {
 }
 async function getAnnonceById(req, res) {
     try {
-        let annonce_id = req.params.id;
+        const annonce_id = req.params.id;
 
         const annonce = await annoncesModels.findByPk(annonce_id);
 
@@ -86,19 +84,7 @@ async function createAnnonce(req, res) {
     try {
         const {titre, description, type, city, category, availability, tarif_type, tarif, modality, status, published_at} = req.body;
 
-        let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
-
-        const user = await usersModels.findByPk(token_decoded.userId);
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: 'L\'utilisateur n\'existe pas'
-            });
-        }
-
-
-        let id_creator = token_decoded.userId;
+        const id_creator = req.user.id;
 
         const annonce = await annoncesModels.create({
             titre,
@@ -140,7 +126,16 @@ async function modifyAnnonce(req, res) {
             });
         }
 
+        if (req.user.id !== annonce.id_creator) {
+            return res.status(401).json({
+                success: false,
+                error: 'Impossible de modifier une annonce qu\'on a pas créé'
+            });
+        }
+
         const {titre, description, type, city, category, availability, tarif_type, tarif, modality, status} = req.body;
+
+        // TODO : ajouter les vérif pour le status par exemple
 
         await annonce.update(
             {
@@ -181,6 +176,13 @@ async function deleteAnnonce(req, res) {
             });
         }
 
+        if (req.user.id !== annonce.id_creator) {
+            return res.status(401).json({
+                success: false,
+                error: 'Impossible de supprimer une annonce qu\'on a pas créé'
+            });
+        }
+
         await annonce.destroy();
 
         res.status(201).json({
@@ -206,18 +208,7 @@ async function changeAnnonceStatus(req, res) {
             });
         }
 
-        let token_decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
-
-        const user = await usersModels.findByPk(token_decoded.userId);
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: 'L\'utilisateur n\'existe pas'
-            });
-        }
-
-        let id_creator = token_decoded.userId;
+        const id_creator = req.user.id;
 
         if (annonce.id_creator !== id_creator) {
             return res.status(400).json({
@@ -228,14 +219,13 @@ async function changeAnnonceStatus(req, res) {
 
         const {status} = req.body;
 
+
         if (!(status.localeCompare("DRAFT") === 0 || status.localeCompare("PUBLISHED") === 0)) {
             return res.status(400).json({
                 success: false,
                 error: "Status impossible"
             });
         }
-
-        console.log(status);
 
         await annonce.update({
             status
@@ -272,12 +262,12 @@ async function allAnnoncesPublished(req, res) {
     }
 }
 
-async function getCategoryPossible(req, res) {
+async function getCategoriesPossible(req, res) {
     try {
         res.json({
             success: true,
             data : {
-                categorys : [
+                categories : [
                     "Design",
                     "Cours",
                     "Bricolage",
@@ -302,5 +292,5 @@ module.exports = {
     deleteAnnonce,
     changeAnnonceStatus,
     allAnnoncesPublished,
-    getCategoryPossible
+    getCategoriesPossible
 };

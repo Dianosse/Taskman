@@ -2,8 +2,6 @@ const usersController = require('../controllers/user.controllers')
 
 const router = require('express').Router();
 
-router.route("/").get(usersController.allUsers);
-
 router.route("/me").get(usersController.getInfos);
 
 router.route("/me/annonces").get(usersController.getMesAnnonces);

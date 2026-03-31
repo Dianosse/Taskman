@@ -8,7 +8,7 @@ async function protect(req, res, next) {
 
         const authHeader = req.headers.authorization;
 
-        if(authHeader?.startsWith('Bearer')) {
+        if(authHeader?.startsWith('Bearer ')) {
             token = authHeader.split(' ')[1];
         }
 
@@ -46,7 +46,7 @@ async function protect(req, res, next) {
         }
 
         req.user = user;
-        next();
+        return next();
     } catch (err) {
         next(err);
     }
