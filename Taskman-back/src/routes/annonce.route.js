@@ -7,9 +7,9 @@ router.route("/").get(annonceController.allAnnonces);
 
 router.route("/allPublished").get(annonceController.allAnnoncesPublished);
 
-router.route("/:id").get(annonceController.getAnnonceById);
+router.route("/categorys").get(annonceController.getCategoryPossible);
 
-// TODO : route : catégory (liste fixe)
+router.route("/:id").get(annonceController.getAnnonceById);
 
 router.use(protect);
 

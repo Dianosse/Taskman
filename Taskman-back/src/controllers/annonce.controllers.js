@@ -1,22 +1,62 @@
 const annoncesModels = require('../models/annonces');
 const jwt = require("jsonwebtoken");
 const usersModels = require("../models/users");
+const { Op } = require("sequelize");
 
 async function allAnnonces(req, res) {
     try {
-        const allAnnonces = await annoncesModels.findAll();
+        const { search, type, category, city, sort } = req.query;
+
+        const where = {};
+        const order = [];
+
+        if (type) {
+            where.type = type;
+        }
+
+        if (category) {
+            where.category = category;
+        }
+
+        if (city) {
+            where.city = city;
+        }
+
+        if (search) {
+            where[Op.or] = [
+                { titre: { [Op.iLike]: `%${search}%` } },
+                { description: { [Op.iLike]: `%${search}%` } }
+            ];
+        }
+
+        if (sort === "recent") {
+            order.push(["published_at", "DESC"]);
+        }
+
+        if (sort === "price_asc") {
+            order.push(["tarif", "ASC"]);
+        }
+
+        if (sort === "price_desc") {
+            order.push(["tarif", "DESC"]);
+        }
+
+        const annonces = await annoncesModels.findAll({
+            where,
+            order
+        });
 
         res.json({
             success: true,
-            data : {
-                allAnnonces
+            data: {
+                annonces
             }
         });
+
     } catch (err) {
         res.status(400).json(err);
     }
 }
-
 async function getAnnonceById(req, res) {
     try {
         let annonce_id = req.params.id;
@@ -232,6 +272,27 @@ async function allAnnoncesPublished(req, res) {
     }
 }
 
+async function getCategoryPossible(req, res) {
+    try {
+        res.json({
+            success: true,
+            data : {
+                categorys : [
+                    "Design",
+                    "Cours",
+                    "Bricolage",
+                    "Cuisine",
+                    "Informatique",
+                    "Aide",
+                    "Baby-sitting"
+                ]
+            }
+        });
+    } catch (err) {
+        res.status(400).json(err);
+    }
+}
+
 
 module.exports = {
     allAnnonces,
@@ -240,5 +301,6 @@ module.exports = {
     modifyAnnonce,
     deleteAnnonce,
     changeAnnonceStatus,
-    allAnnoncesPublished
+    allAnnoncesPublished,
+    getCategoryPossible
 };
