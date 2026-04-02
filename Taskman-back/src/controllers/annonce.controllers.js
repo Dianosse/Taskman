@@ -5,7 +5,13 @@ async function allAnnonces(req, res) {
     try {
         const { search, type, category, city, sort } = req.query;
 
-        const where = {};
+        const page = Math.max(parseInt(req.query.page) || 1, 1);
+        const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+        const offset = (page - 1) * limit;
+
+        const where = {
+            status: "PUBLISHED"
+        };
         const order = [];
 
         if (type) {
@@ -39,22 +45,30 @@ async function allAnnonces(req, res) {
             order.push(["tarif", "DESC"]);
         }
 
-        const annonces = await annoncesModels.findAll({
+        const { count, rows } = await annoncesModels.findAndCountAll({
             where,
-            order
+            order,
+            limit,
+            offset
         });
 
         res.json({
             success: true,
             data: {
-                annonces
+                annonces: rows
+            },
+            pagination: {
+                page,
+                limit,
+                totalItems: count,
+                totalPages: Math.ceil(count / limit)
             }
         });
-
     } catch (err) {
         res.status(400).json(err);
     }
 }
+
 async function getAnnonceById(req, res) {
     try {
         const annonce_id = req.params.id;
@@ -82,9 +96,58 @@ async function getAnnonceById(req, res) {
 
 async function createAnnonce(req, res) {
     try {
-        const {titre, description, type, city, category, availability, tarif_type, tarif, modality, status, published_at} = req.body;
+        const {titre, description, type, city, category, availability, tarif_type, tarif, modality, status} = req.body;
 
         const id_creator = req.user.id;
+
+        const categories = ["Design", "Cours", "Bricolage", "Cuisine", "Informatique", "Aide", "Baby-sitting"];
+        const modalities = ["REMOTE", "AT_PROVIDER", "AT_CUSTOMER"];
+
+        if (!titre || titre.trim().length < 3) {
+            return res.status(400).json({ success: false, error: "Titre invalide" });
+        }
+
+        if (!description || description.trim() === "") {
+            return res.status(400).json({ success: false, error: "Description invalide" });
+        }
+
+        if (!["OFFER", "REQUEST"].includes(type)) {
+            return res.status(400).json({ success: false, error: "Type invalide" });
+        }
+
+        if (!category || !categories.includes(category)) {
+            return res.status(400).json({ success: false, error: "Catégorie invalide" });
+        }
+
+        if (!city || city.trim() === "") {
+            return res.status(400).json({ success: false, error: "Ville invalide" });
+        }
+
+        if (availability && availability.trim() === "") {
+            return res.status(400).json({ success: false, error: "Disponibilité invalide" });
+        }
+
+        if (!["FREE", "HOURLY", "FIXED"].includes(tarif_type)) {
+            return res.status(400).json({ success: false, error: "Type de tarif invalide" });
+        }
+
+        if (tarif_type === "FREE" && tarif !== 0) {
+            return res.status(400).json({ success: false, error: "Le tarif doit être 0 pour FREE" });
+        }
+
+        if (["HOURLY", "FIXED"].includes(tarif_type)) {
+            if (tarif === undefined || isNaN(tarif) || tarif <= 0) {
+                return res.status(400).json({ success: false, error: "Tarif invalide" });
+            }
+        }
+
+        if (!modality || !modalities.includes(modality)) {
+            return res.status(400).json({ success: false, error: "Modalité invalide" });
+        }
+
+        if (status && !["DRAFT", "PUBLISHED"].includes(status)) {
+            return res.status(400).json({ success: false, error: "Status invalide" });
+        }
 
         const annonce = await annoncesModels.create({
             titre,
@@ -97,7 +160,6 @@ async function createAnnonce(req, res) {
             tarif,
             modality,
             status,
-            published_at,
             id_creator
         });
 
@@ -135,7 +197,92 @@ async function modifyAnnonce(req, res) {
 
         const {titre, description, type, city, category, availability, tarif_type, tarif, modality, status} = req.body;
 
-        // TODO : ajouter les vérif pour le status par exemple
+        const categories = ["Design", "Cours", "Bricolage", "Cuisine", "Informatique", "Aide", "Baby-sitting"];
+        const modalities = ["REMOTE", "AT_PROVIDER", "AT_CUSTOMER"];
+
+        if (titre !== undefined && titre.trim().length < 3) {
+            return res.status(400).json({
+                success: false,
+                error: "Titre invalide"
+            });
+        }
+
+        if (description !== undefined && description.trim() === "") {
+            return res.status(400).json({
+                success: false,
+                error: "Description invalide"
+            });
+        }
+
+        if (type !== undefined && !["OFFER", "REQUEST"].includes(type)) {
+            return res.status(400).json({
+                success: false,
+                error: "Type invalide"
+            });
+        }
+
+        if (category !== undefined && !categories.includes(category)) {
+            return res.status(400).json({
+                success: false,
+                error: "Catégorie invalide"
+            });
+        }
+
+        if (city !== undefined && city.trim() === "") {
+            return res.status(400).json({
+                success: false,
+                error: "Ville invalide"
+            });
+        }
+
+        if (availability !== undefined && availability.trim() === "") {
+            return res.status(400).json({
+                success: false,
+                error: "Disponibilité invalide"
+            });
+        }
+
+        if (tarif_type !== undefined && !["FREE", "HOURLY", "FIXED"].includes(tarif_type)) {
+            return res.status(400).json({
+                success: false,
+                error: "Type de tarif invalide"
+            });
+        }
+
+        if (modality !== undefined && !modalities.includes(modality)) {
+            return res.status(400).json({
+                success: false,
+                error: "Modalité invalide"
+            });
+        }
+
+        if (status !== undefined && !["DRAFT", "PUBLISHED"].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                error: "Status invalide"
+            });
+        }
+
+        if (tarif_type === "FREE" && tarif !== undefined && tarif !== 0) {
+            return res.status(400).json({
+                success: false,
+                error: "Le tarif doit être 0 pour FREE"
+            });
+        }
+
+        if (tarif !== undefined && (isNaN(tarif) || tarif < 0)) {
+            return res.status(400).json({
+                success: false,
+                error: "Tarif invalide"
+            });
+        }
+
+        if ((tarif_type === "HOURLY" || tarif_type === "FIXED") && tarif !== undefined && tarif <= 0) {
+            return res.status(400).json({
+                success: false,
+                error: "Le tarif doit être supérieur à 0"
+            });
+        }
 
         await annonce.update(
             {
@@ -243,25 +390,6 @@ async function changeAnnonceStatus(req, res) {
     }
 }
 
-async function allAnnoncesPublished(req, res) {
-    try {
-        const allAnnoncesPublished = await annoncesModels.findAll({
-            where : {
-                status : "PUBLISHED"
-            }
-        });
-
-        res.json({
-            success: true,
-            data : {
-                allAnnoncesPublished
-            }
-        });
-    } catch (err) {
-        res.status(400).json(err);
-    }
-}
-
 async function getCategoriesPossible(req, res) {
     try {
         res.json({
@@ -291,6 +419,5 @@ module.exports = {
     modifyAnnonce,
     deleteAnnonce,
     changeAnnonceStatus,
-    allAnnoncesPublished,
     getCategoriesPossible
 };

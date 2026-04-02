@@ -5,8 +5,6 @@ const router = require('express').Router();
 
 router.route("/").get(annonceController.allAnnonces);
 
-router.route("/allPublished").get(annonceController.allAnnoncesPublished);
-
 router.route("/categories").get(annonceController.getCategoriesPossible);
 
 router.route("/:id").get(annonceController.getAnnonceById);
