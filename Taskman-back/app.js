@@ -1,6 +1,7 @@
 /* modules */
 const express = require('express');
 const helmet = require('helmet');
+const cors = require('cors')
 
 
 require('dotenv').config();
@@ -19,9 +20,15 @@ const conversationsRoutes = require('./src/routes/conversations.route');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+}));
+
 /* middlewares */
 app.use(log);
 app.use(helmet());
+
 
 app.use(express.json());
 
