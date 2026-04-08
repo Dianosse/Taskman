@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <h1>Register</h1>
+    <h1>Créer un compte</h1>
 
     <form @submit.prevent="handleRegister" novalidate>
       <input v-model.trim="username" type="text" placeholder="Username" required />
@@ -9,14 +9,14 @@
       <input v-model="passwordConfirm" type="password" placeholder="Confirm password" required />
       <input v-model.trim="bio" type="text" placeholder="Bio" required />
 
-      <button type="submit">Register</button>
+      <button type="submit">Créer un compte</button>
     </form>
 
     <p v-if="error" class="error">{{ error }}</p>
 
     <p>
-      Already have an account ?
-      <router-link to="/login">Login</router-link>
+      Vous avez déjà un compte ?
+      <router-link to="/login">Se connecter</router-link>
     </p>
   </div>
 </template>

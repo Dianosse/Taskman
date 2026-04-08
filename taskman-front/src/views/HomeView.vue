@@ -1,72 +1,167 @@
 <template>
-  <div class="container">
-    <h1>Home</h1>
+  <div>
+    <Navbar />
 
-    <div v-if="user">
-      <h2>Bienvenue {{ user.username }}</h2>
+    <main class="home">
+      <h1>Liste des annonces</h1>
 
-      <p><strong>Email :</strong> {{ user.email }}</p>
-      <p><strong>Bio :</strong> {{ user.bio }}</p>
+      <div class="grid">
+        <AnnonceCard
+            v-for="annonce in annonces"
+            :key="annonce.id"
+            :annonce="annonce"
+        />
+      </div>
 
-      <p class="token">
-        <strong>Token :</strong>
-        <span>{{ token }}</span>
-      </p>
+      <div class="pagination">
+        <button @click="prevPage" :disabled="page === 1">
+          Précédent
+        </button>
 
-      <button @click="logout">Logout</button>
-    </div>
+        <span>Page {{ page }} / {{ totalPages }}</span>
 
-    <div v-else>
-      <p>You are not logged in.</p>
+        <button @click="nextPage" :disabled="page === totalPages">
+          Suivant
+        </button>
+      </div>
 
-      <router-link to="/login">Login</router-link> |
-      <router-link to="/register">Register</router-link>
-    </div>
+      <div class="limit-picker">
+        <p>Nombre d'annonces par page :</p>
+
+        <div class="limit-buttons">
+          <button
+              v-for="value in limitOptions"
+              :key="value"
+              @click="changeLimit(value)"
+              :class="{ active: limit === value }"
+              class="limit-button"
+          >
+            {{ value }}
+          </button>
+        </div>
+      </div>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, watch } from 'vue'
+import Navbar from '@/components/Navbar.vue'
+import AnnonceCard from '@/components/AnnonceCard.vue'
+import { getAnnonces } from '@/services/annonces.service'
+import { useRoute } from 'vue-router'
 
-const user = ref(null);
-const token = ref(null);
-const router = useRouter()
+const annonces = ref([])
+const page = ref(1)
+const limit = ref(8)
+const totalPages = ref(1)
+const route = useRoute()
 
-onMounted(() => {
-  const storedUser = localStorage.getItem('user');
-  const storedToken = localStorage.getItem('token');
+const limitOptions = [8, 16, 24, 32]
 
-  console.log(storedToken);
+async function fetchAnnonces() {
+  try {
+    const search = route.query.search || ''
 
-  if (storedUser) {
-    user.value = JSON.parse(storedUser);
+    const res = await getAnnonces(page.value, limit.value, search)
+
+    annonces.value = res.data.annonces
+    totalPages.value = res.pagination.totalPages
+  } catch (err) {
+    console.error(err)
   }
-  if (storedToken) {
-    token.value = storedToken
+}
+
+onMounted(fetchAnnonces)
+
+watch(page, fetchAnnonces)
+
+function nextPage() {
+  if (page.value < totalPages.value) {
+    page.value++
   }
+}
+
+function prevPage() {
+  if (page.value > 1) {
+    page.value--
+  }
+}
+
+async function changeLimit(newLimit) {
+  if (limit.value === newLimit) {
+    return
+  }
+
+  limit.value = newLimit
+  page.value = 1
+  await fetchAnnonces()
+}
+
+watch(() => route.query.search, () => {
+  page.value = 1
+  fetchAnnonces()
 })
 
-function logout() {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
-
-  user.value = null
-
-  router.push('/login')
-}
 </script>
 
 <style scoped>
-.container {
-  max-width: 500px;
-  margin: 100px auto;
-  text-align: center;
+.home {
+  max-width: 1200px;
+  margin: 30px auto;
+  padding: 0 20px;
 }
 
-button {
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
   margin-top: 20px;
-  padding: 10px;
+}
+
+.pagination {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.limit-picker {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.limit-picker p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.limit-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.limit-button {
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
   cursor: pointer;
+}
+
+.limit-button.active {
+  border-color: black;
+  font-weight: 700;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 </style>

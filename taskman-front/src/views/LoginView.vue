@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+
     <h1>Login</h1>
 
     <form @submit.prevent="handleLogin" novalidate>
@@ -12,8 +13,8 @@
     <p v-if="error" class="error">{{ error }}</p>
 
     <p>
-      No account ?
-      <router-link to="/register">Register</router-link>
+      Pas de compte ?
+      <router-link to="/register">Créer un compte</router-link>
     </p>
   </div>
 </template>
