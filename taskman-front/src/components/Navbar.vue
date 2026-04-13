@@ -22,7 +22,9 @@
         Publier une annonce
       </router-link>
 
-      <span class="username">{{ user.username }}</span>
+      <router-link to="/profile" class="username-btn">
+        {{ user.username }}
+      </router-link>
     </div>
 
     <div class="navbar-right" v-else>
@@ -126,7 +128,7 @@ function handleSearch() {
 
 .register-btn {
   padding: 8px 14px;
-  border: 1px solid black;
+  border: 1px solid darkorange;
   border-radius: 8px;
 }
 
@@ -134,14 +136,33 @@ function handleSearch() {
   padding: 8px 22px;
   min-width: 190px;
   text-align: center;
-  background: black;
-  color: white;
+  background: darkorange;
+  color: darkblue;
   border-radius: 8px;
   text-decoration: none;
   font-weight: 500;
 }
 
-.username {
-  font-weight: 600;
+.publish-btn:hover {
+  background: darkblue;
+  color: darkorange;
+
 }
+
+.username-btn {
+  padding: 8px 22px;
+  min-width: 190px;
+  text-align: center;
+  border-radius: 8px;
+  background: darkblue;
+  color: darkorange;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.username-btn:hover {
+  background: darkorange;
+  color: darkblue;
+}
+
 </style>

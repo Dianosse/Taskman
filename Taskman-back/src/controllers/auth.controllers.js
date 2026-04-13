@@ -2,9 +2,14 @@ const userModel = require('../models/users')
 const passwordUtils = require('../utils/passwordHash');
 const jwtUtils = require('../utils/jwt');
 
+// TODO : vérifier les infos présentes ou pas
+
 async function registerUser(req, res) {
     try {
         const {email, username, password, passwordConfirm, bio} = req.body;
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 
         if (password !== passwordConfirm) {
             return res.status(400).json({
@@ -12,6 +17,21 @@ async function registerUser(req, res) {
                 error: 'Les mots de passe ne correspondent pas'
             });
         }
+
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial'
+            });
+        }
+
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Format de mail invalide'
+            });
+        }
+
 
         const userExistant = await userModel.findOne({
             where :

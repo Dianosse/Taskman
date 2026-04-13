@@ -81,12 +81,13 @@ function goToDetail() {
   padding: 10px;
   border: none;
   border-radius: 8px;
-  background: black;
-  color: white;
+  background: darkorange;
+  color: darkblue;
   cursor: pointer;
 }
 
 .consult-btn:hover {
-  background: #333;
+  background: darkblue;
+  color: darkorange;
 }
 </style>

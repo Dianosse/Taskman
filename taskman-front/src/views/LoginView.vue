@@ -1,7 +1,7 @@
 <template>
   <div class="container">
 
-    <h1>Login</h1>
+    <h1>Se connecter</h1>
 
     <form @submit.prevent="handleLogin" novalidate>
       <input v-model="email" type="email" placeholder="Email" required />

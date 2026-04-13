@@ -1,4 +1,5 @@
 const annoncesModels = require('../models/annonces');
+const usersModels = require('../models/users');
 const { Op } = require("sequelize");
 
 async function allAnnonces(req, res) {
@@ -82,10 +83,18 @@ async function getAnnonceById(req, res) {
             });
         }
 
+        const user = await usersModels.findByPk(annonce.id_creator);
+
         res.json({
             success: true,
             data : {
-                annonce
+                annonce : {
+                    annonce,
+                    "creator" : {
+                        "id" : user.id,
+                        "username" : user.username
+                    }
+                }
             }
         });
 
