@@ -10,6 +10,7 @@ import UserDetailView from '@/views/UserDetailView.vue';
 import EditProfileView from "@/views/EditProfileView.vue";
 import FavoritesView from "@/views/FavoritesView.vue";
 import ConversationsView from "@/views/ConversationsView.vue";
+import CreateAnnonceView from '@/views/CreateAnnonceView.vue'
 
 
 const routes = [
@@ -23,6 +24,7 @@ const routes = [
     { path: '/profile/edit', component: EditProfileView, meta: { requiresAuth: true } },
     { path: '/favorites', component: FavoritesView, meta: { requiresAuth: true } },
     { path: '/conversations', component: ConversationsView, meta: { requiresAuth: true } },
+    { path: '/annonces/create', component: CreateAnnonceView, meta: { requiresAuth: true } },
 
     { path: '/:pathMatch(.*)*', component: NotFoundView }
 ];

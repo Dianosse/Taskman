@@ -75,7 +75,7 @@
       </section>
 
       <p v-if="favoriteSuccess" class="success-message">
-        Annonce ajoutée aux favoris
+        {{ favoriteSuccess }}
       </p>
 
       <p v-if="favoriteError" class="favorite-error">
@@ -88,7 +88,7 @@
         </router-link>
 
         <button
-            v-if="!isOwnAnnonce"
+            v-if="currentUser && !isOwnAnnonce && !isFavorite"
             class="favorite-btn"
             @click="handleAddFavori"
             :disabled="favoriteLoading"
@@ -97,7 +97,16 @@
         </button>
 
         <button
-            v-if="!isOwnAnnonce"
+            v-if="currentUser && !isOwnAnnonce && isFavorite"
+            class="remove-favorite-btn"
+            @click="handleRemoveFavori"
+            :disabled="favoriteLoading"
+        >
+          {{ favoriteLoading ? 'Suppression...' : 'Supprimer des favoris' }}
+        </button>
+
+        <button
+            v-if="currentUser && !isOwnAnnonce"
             class="contact-btn"
         >
           Contacter
@@ -111,7 +120,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getAnnonceById } from '@/services/annonces.service'
-import { addFavori } from '@/services/favoris.service'
+import { addFavori, getMesFavoris, removeFavori } from '@/services/favoris.service'
 import Navbar from '@/components/Navbar.vue'
 
 const route = useRoute()
@@ -122,8 +131,9 @@ const error = ref(null)
 const currentUser = ref(null)
 
 const favoriteLoading = ref(false)
-const favoriteSuccess = ref(false)
+const favoriteSuccess = ref('')
 const favoriteError = ref('')
+const isFavorite = ref(false)
 
 const isOwnAnnonce = computed(() => {
   if (!currentUser.value || !annonce.value) {
@@ -153,6 +163,28 @@ const formattedModality = computed(() => {
   return annonce.value.annonce.modality
 })
 
+async function checkIfFavorite() {
+  if (!currentUser.value || !annonce.value || isOwnAnnonce.value) {
+    return
+  }
+
+  try {
+    const res = await getMesFavoris()
+
+    if (!res.success) {
+      return
+    }
+
+    const favoris = res.data.allFavoris || []
+
+    isFavorite.value = favoris.some(
+        (favori) => favori.id === annonce.value.annonce.id
+    )
+  } catch {
+    isFavorite.value = false
+  }
+}
+
 async function fetchAnnonce() {
   try {
     const storedUser = localStorage.getItem('user')
@@ -170,6 +202,8 @@ async function fetchAnnonce() {
     }
 
     annonce.value = res.data.annonce
+
+    await checkIfFavorite()
   } catch (err) {
     error.value = err.response?.data?.error || "Erreur serveur"
   } finally {
@@ -180,7 +214,7 @@ async function fetchAnnonce() {
 async function handleAddFavori() {
   try {
     favoriteLoading.value = true
-    favoriteSuccess.value = false
+    favoriteSuccess.value = ''
     favoriteError.value = ''
 
     const res = await addFavori(annonce.value.annonce.id)
@@ -189,9 +223,31 @@ async function handleAddFavori() {
       throw new Error("Impossible d'ajouter aux favoris")
     }
 
-    favoriteSuccess.value = true
+    isFavorite.value = true
+    favoriteSuccess.value = 'Annonce ajoutée aux favoris'
   } catch (err) {
     favoriteError.value = err.response?.data?.error || err.message || "Erreur lors de l'ajout aux favoris"
+  } finally {
+    favoriteLoading.value = false
+  }
+}
+
+async function handleRemoveFavori() {
+  try {
+    favoriteLoading.value = true
+    favoriteSuccess.value = ''
+    favoriteError.value = ''
+
+    const res = await removeFavori(annonce.value.annonce.id)
+
+    if (!res.success) {
+      throw new Error("Impossible de supprimer des favoris")
+    }
+
+    isFavorite.value = false
+    favoriteSuccess.value = 'Annonce supprimée des favoris'
+  } catch (err) {
+    favoriteError.value = err.response?.data?.error || err.message || "Erreur lors de la suppression des favoris"
   } finally {
     favoriteLoading.value = false
   }
@@ -382,6 +438,21 @@ onMounted(fetchAnnonce)
 }
 
 .favorite-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.remove-favorite-btn {
+  padding: 12px 18px;
+  background: #111;
+  color: white;
+  border: 1px solid #111;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.remove-favorite-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

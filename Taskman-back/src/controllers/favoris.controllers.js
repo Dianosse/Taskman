@@ -1,15 +1,22 @@
 const favorisModels = require('../models/favoris');
-const annonceModels = require('../models/annonces')
+const annonceModels = require('../models/annonces');
+
 
 async function allFavoris(req, res) {
     try {
-        const allFavoris = await favorisModels.findAll({
-            where: {
-                id_user: req.user.id
+        const [allFavoris] = await annonceModels.sequelize.query(
+            `
+            SELECT a.*
+            FROM annonces a
+            INNER JOIN favoris f ON a.id = f.id_annonce
+            WHERE f.id_user = :id_user
+            `,
+            {
+                replacements: { id_user: req.user.id }
             }
-        });
+        );
 
-        res.json({
+        return res.json({
             success: true,
             data: {
                 allFavoris
@@ -17,7 +24,8 @@ async function allFavoris(req, res) {
         });
 
     } catch (err) {
-        res.status(400).json(err);
+        console.log(err);
+        return res.status(400).json(err);
     }
 }
 

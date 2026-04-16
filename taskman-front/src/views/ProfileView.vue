@@ -20,7 +20,7 @@
           </div>
 
           <div class="profile-actions">
-            <router-link to="/profile/edit" class="action-btn primary-btn">
+            <router-link to="/profile/edit" class="action-btn">
               Modifier mon profil
             </router-link>
 
@@ -159,7 +159,7 @@ onMounted(fetchProfileData)
   background: white;
 }
 
-.primary-btn {
+.action-btn:hover {
   background: darkorange;
   color: darkblue;
 }

@@ -15,3 +15,8 @@ export async function getAnnonceById(id) {
     const res = await api.get(`/annonces/${id}`)
     return res.data
 }
+
+export async function createAnnonce(data) {
+    const res = await api.post('/annonces', data)
+    return res.data
+}

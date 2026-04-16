@@ -42,6 +42,7 @@ async function getInfos(req, res) {
     }
 }
 
+// TODO : vérifier que l'email est pas déjà utilisé par un autre compte si c'est un truc modif
 
 async function changeInfosUserById(req, res) {
     try {
@@ -139,10 +140,30 @@ async function getMesAnnonces(req, res) {
     }
 }
 
+async function getAnnoncesByUser(req, res) {
+    try {
+        const id = parseInt(req.params.id)
+
+        const annonces = await annonceModels.findAll({
+            where: { id_creator: id }
+        })
+
+        res.json({
+            success: true,
+            data: {
+                annonces
+            }
+        })
+    } catch (err) {
+        res.status(400).json(err)
+    }
+}
+
 module.exports = {
     getUserById,
     getInfos,
     changeInfosUserById,
     deleteUserById,
-    getMesAnnonces
+    getMesAnnonces,
+    getAnnoncesByUser
 };
