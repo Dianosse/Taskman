@@ -82,9 +82,21 @@
         {{ favoriteError }}
       </p>
 
+      <p v-if="conversationError" class="favorite-error">
+        {{ conversationError }}
+      </p>
+
       <div class="actions">
         <router-link to="/" class="secondary-btn">
           Retour
+        </router-link>
+
+        <router-link
+            v-if="currentUser && isOwnAnnonce"
+            :to="`/annonces/${annonce.annonce.id}/edit`"
+            class="edit-btn"
+        >
+          Modifier l'annonce
         </router-link>
 
         <button
@@ -108,8 +120,10 @@
         <button
             v-if="currentUser && !isOwnAnnonce"
             class="contact-btn"
+            @click="handleCreateConversation"
+            :disabled="conversationLoading"
         >
-          Contacter
+          {{ conversationLoading ? 'Ouverture...' : 'Contacter' }}
         </button>
       </div>
     </div>
@@ -118,12 +132,14 @@
 
 <script setup>
 import { computed, ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getAnnonceById } from '@/services/annonces.service'
 import { addFavori, getMesFavoris, removeFavori } from '@/services/favoris.service'
+import { createConversation } from '@/services/conversations.service'
 import Navbar from '@/components/Navbar.vue'
 
 const route = useRoute()
+const router = useRouter()
 
 const annonce = ref(null)
 const loading = ref(true)
@@ -134,6 +150,9 @@ const favoriteLoading = ref(false)
 const favoriteSuccess = ref('')
 const favoriteError = ref('')
 const isFavorite = ref(false)
+
+const conversationLoading = ref(false)
+const conversationError = ref('')
 
 const isOwnAnnonce = computed(() => {
   if (!currentUser.value || !annonce.value) {
@@ -156,8 +175,8 @@ const formattedModality = computed(() => {
     return 'À distance'
   }
 
-  if (annonce.value.annonce.modality === 'IN_PERSON') {
-    return 'En présentiel'
+  if (annonce.value.annonce.modality === 'AT_PROVIDER') {
+    return 'Chez le prestataire'
   }
 
   return annonce.value.annonce.modality
@@ -250,6 +269,30 @@ async function handleRemoveFavori() {
     favoriteError.value = err.response?.data?.error || err.message || "Erreur lors de la suppression des favoris"
   } finally {
     favoriteLoading.value = false
+  }
+}
+
+async function handleCreateConversation() {
+  try {
+    conversationLoading.value = true
+    conversationError.value = ''
+
+    const res = await createConversation({
+      id_user2: annonce.value.creator.id,
+      id_annonce: annonce.value.annonce.id
+    })
+
+    if (!res.success) {
+      throw new Error('Impossible de créer la conversation')
+    }
+
+    const conversationId = res.data.conversation.id
+    router.push(`/conversations/${conversationId}`)
+  } catch (err) {
+    conversationError.value =
+        err.response?.data?.error || err.message || 'Erreur lors de la création de la conversation'
+  } finally {
+    conversationLoading.value = false
   }
 }
 
@@ -427,6 +470,16 @@ onMounted(fetchAnnonce)
   font-weight: 600;
 }
 
+.edit-btn {
+  padding: 12px 18px;
+  background: #111;
+  color: white;
+  border: 1px solid #111;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
 .favorite-btn {
   padding: 12px 18px;
   background: white;
@@ -465,6 +518,11 @@ onMounted(fetchAnnonce)
   border-radius: 8px;
   cursor: pointer;
   font-weight: 700;
+}
+
+.contact-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .contact-btn:hover {

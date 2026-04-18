@@ -6,13 +6,18 @@ const { Op } = require('sequelize');
 
 async function getMyConversations(req, res) {
     try{
-        const id_creator = req.user.id;
-
-        const allMyConversation = await conversationModels.findAll({
-            where : {
-                [Op.or]: [{id_user1 : id_creator}, {id_user2: id_creator}]
+        const [allMyConversation] = await conversationModels.sequelize.query(
+            `
+            select conv.*, u1.username as username1, u2.username as username2
+            from conversations conv
+            INNER JOIN users u1 ON conv.id_user1 = u1.id
+            INNER JOIN users u2 ON conv.id_user2 = u2.id
+            WHERE conv.id_user1 = :id_creator OR conv.id_user2 = :id_creator
+            `,
+            {
+                replacements: {id_creator: req.user.id}
             }
-        });
+        );
 
         res.json({
             success:true,
@@ -59,10 +64,11 @@ async function createConversation(req, res) {
             where: {
                 id_annonce,
                 [Op.or]: [
-                    {id_user1, id_user2_int}, {id_user1: id_user2_int, id_user2: id_user1}
+                    {id_user1 : id_user1, id_user2: id_user2_int}, {id_user1: id_user2_int, id_user2: id_user1}
                 ]
             }
         });
+
         if (conv) {
             return res.status(403).json({
                 success: false,
@@ -70,10 +76,20 @@ async function createConversation(req, res) {
             });
         }
 
+        let id1;
+        let id2;
+        if (id_user1 > id_user2_int) {
+            id1 = id_user2_int;
+            id2 = id_user1;
+        } else {
+            id1 = id_user1;
+            id2 = id_user2_int;
+        }
+
         const conversation = await conversationModels.create({
             id_annonce,
-            id_user1,
-            id_user2 : id_user2_int
+            id_user1 : id1,
+            id_user2 : id2
         });
 
         res.json({
@@ -84,6 +100,7 @@ async function createConversation(req, res) {
         });
 
     } catch (err) {
+        console.log(err);
         res.status(400).json(err);
     }
 }

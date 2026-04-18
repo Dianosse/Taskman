@@ -7,3 +7,8 @@ import router from './router'
 createApp(App)
     .use(router)
     .mount('#app')
+
+
+// TODO :
+//      - user :
+//          - ajouter bouton logout

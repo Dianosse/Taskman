@@ -11,6 +11,8 @@ import EditProfileView from "@/views/EditProfileView.vue";
 import FavoritesView from "@/views/FavoritesView.vue";
 import ConversationsView from "@/views/ConversationsView.vue";
 import CreateAnnonceView from '@/views/CreateAnnonceView.vue'
+import EditAnnonceView from '@/views/EditAnnonceView.vue';
+import ConversationMessagesView from '@/views/ConversationMessagesView.vue';
 
 
 const routes = [
@@ -25,6 +27,9 @@ const routes = [
     { path: '/favorites', component: FavoritesView, meta: { requiresAuth: true } },
     { path: '/conversations', component: ConversationsView, meta: { requiresAuth: true } },
     { path: '/annonces/create', component: CreateAnnonceView, meta: { requiresAuth: true } },
+    { path: '/annonces/:id/edit', component: EditAnnonceView, meta: { requiresAuth: true } },
+    { path: '/conversations', component: ConversationsView, meta: { requiresAuth: true } },
+    { path: '/conversations/:id', component: ConversationMessagesView, meta: { requiresAuth: true } },
 
     { path: '/:pathMatch(.*)*', component: NotFoundView }
 ];
