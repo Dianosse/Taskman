@@ -23,7 +23,16 @@
 
           <input v-model="city" placeholder="Ville" required />
 
-          <input v-model="category" placeholder="Catégorie" required />
+          <select v-model="category" required>
+            <option disabled value="">Sélectionner une catégorie</option>
+            <option
+                v-for="item in categories"
+                :key="item"
+                :value="item"
+            >
+              {{ item }}
+            </option>
+          </select>
 
           <input v-model="availability" placeholder="Disponibilité" required />
 
@@ -67,10 +76,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Navbar from '@/components/Navbar.vue'
-import { createAnnonce } from '@/services/annonces.service'
+import { createAnnonce, getCategories } from '@/services/annonces.service'
 
 const router = useRouter()
 
@@ -85,14 +94,36 @@ const tarif = ref(0)
 const modality = ref('AT_CUSTOMER')
 const status = ref('DRAFT')
 
+const categories = ref([])
+
 const error = ref('')
 const loading = ref(false)
+
+async function fetchCategories() {
+  try {
+    const res = await getCategories()
+
+    if (!res.success) {
+      throw new Error('Impossible de récupérer les catégories')
+    }
+
+    categories.value = res.data.categories
+  } catch (err) {
+    error.value =
+        err.response?.data?.error || err.message || 'Erreur lors du chargement des catégories'
+  }
+}
 
 function validate() {
   error.value = ''
 
   if (!titre.value || !description.value) {
     error.value = 'Titre et description requis'
+    return false
+  }
+
+  if (!category.value) {
+    error.value = 'Catégorie requise'
     return false
   }
 
@@ -137,6 +168,8 @@ async function handleSubmit() {
     loading.value = false
   }
 }
+
+onMounted(fetchCategories)
 </script>
 
 <style scoped>

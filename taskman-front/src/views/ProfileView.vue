@@ -31,6 +31,10 @@
             <router-link to="/conversations" class="action-btn">
               Mes conversations
             </router-link>
+
+            <button @click="handleLogout" class="logout-btn">
+              Se déconnecter
+            </button>
           </div>
         </section>
 
@@ -64,11 +68,14 @@ import { ref, onMounted } from 'vue'
 import Navbar from '@/components/Navbar.vue'
 import AnnonceCard from '@/components/AnnonceCard.vue'
 import { getMyProfile, getMyAnnonces } from '@/services/users.service'
+import { useRouter } from 'vue-router'
+import { logout } from '@/services/auth.service'
 
 const user = ref(null)
 const mesAnnonces = ref([])
 const loading = ref(true)
 const error = ref('')
+const router = useRouter()
 
 async function fetchProfileData() {
   try {
@@ -92,6 +99,18 @@ async function fetchProfileData() {
   } finally {
     loading.value = false
   }
+}
+
+async function handleLogout() {
+  try {
+    await logout()
+  } catch (e) {
+  }
+
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+
+  router.push('/')
 }
 
 onMounted(fetchProfileData)
@@ -207,5 +226,22 @@ onMounted(fetchProfileData)
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
+}
+
+.logout-btn {
+  display: inline-block;
+  padding: 10px 14px;
+  border: 1px solid darkorange;
+  border-radius: 8px;
+  text-decoration: none;
+  color: darkblue;
+  text-align: center;
+  font-weight: 500;
+  background: white;
+}
+
+.logout-btn:hover {
+  background: darkorange;
+  color: #111;
 }
 </style>

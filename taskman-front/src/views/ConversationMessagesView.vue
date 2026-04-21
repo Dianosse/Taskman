@@ -60,10 +60,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import Navbar from '@/components/Navbar.vue'
 import { getConversationMessages, sendMessage } from '@/services/messages.service'
+import socket from '@/services/socket'
 
 const route = useRoute()
 
@@ -76,6 +77,7 @@ const currentUser = ref(null)
 const newMessage = ref('')
 const sending = ref(false)
 const sendError = ref('')
+const messagesContainer = ref(null)
 
 function formatDate(dateString) {
   return new Date(dateString).toLocaleString()
@@ -87,6 +89,14 @@ function isMyMessage(message) {
   }
 
   return message.id_user === currentUser.value.id
+}
+
+async function scrollToBottom() {
+  await nextTick()
+
+  if (messagesContainer.value) {
+    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+  }
 }
 
 async function fetchMessages() {
@@ -113,6 +123,21 @@ async function fetchMessages() {
   }
 }
 
+function handleNewMessage(message) {
+  if (Number(message.id_conversation) !== Number(conversationId)) {
+    return
+  }
+
+  const alreadyExists = messages.value.some((item) => item.id === message.id)
+
+  if (alreadyExists) {
+    return
+  }
+
+  messages.value.push(message)
+  scrollToBottom()
+}
+
 async function handleSendMessage() {
   try {
     if (!newMessage.value) {
@@ -122,13 +147,18 @@ async function handleSendMessage() {
     sending.value = true
     sendError.value = ''
 
-    await sendMessage(conversationId, {
-      id_conversation: Number(conversationId),
-      content: newMessage.value
-    })
+    const content = newMessage.value
 
     newMessage.value = ''
-    await fetchMessages()
+
+    const res = await sendMessage(conversationId, {
+      id_conversation: Number(conversationId),
+      content
+    })
+
+    if (!res.success) {
+      throw new Error("Erreur lors de l'envoi du message")
+    }
   } catch (err) {
     sendError.value =
         err.response?.data?.error || err.message || "Erreur lors de l'envoi du message"
@@ -137,16 +167,17 @@ async function handleSendMessage() {
   }
 }
 
-const messagesContainer = ref(null)
+onMounted(async () => {
+  await fetchMessages()
 
-async function scrollToBottom() {
-  await nextTick()
+  socket.emit('join_conversation', conversationId)
+  socket.on('new_message', handleNewMessage)
+})
 
-  if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-  }
-}
-onMounted(fetchMessages)
+onUnmounted(() => {
+  socket.emit('leave_conversation', conversationId)
+  socket.off('new_message', handleNewMessage)
+})
 </script>
 
 <style scoped>
@@ -192,7 +223,6 @@ onMounted(fetchMessages)
   border-radius: 16px;
   background: white;
   padding: 20px;
-
   display: flex;
   flex-direction: column;
   height: 70vh;
@@ -211,6 +241,7 @@ onMounted(fetchMessages)
   flex-direction: column;
   gap: 12px;
   padding-right: 8px;
+  margin-bottom: 20px;
 }
 
 .message-row {

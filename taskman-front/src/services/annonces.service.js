@@ -25,3 +25,8 @@ export async function updateAnnonce(id, data) {
     const res = await api.put(`/annonces/${id}`, data);
     return res.data;
 }
+
+export async function getCategories() {
+    const res = await api.get('/annonces/categories');
+    return res.data;
+}

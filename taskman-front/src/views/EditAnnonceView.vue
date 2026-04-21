@@ -28,14 +28,15 @@
 
             <input v-model.trim="city" placeholder="Ville" required />
 
-            <select v-model="category">
-              <option value="Design">Design</option>
-              <option value="Cours">Cours</option>
-              <option value="Bricolage">Bricolage</option>
-              <option value="Cuisine">Cuisine</option>
-              <option value="Informatique">Informatique</option>
-              <option value="Aide">Aide</option>
-              <option value="Baby-sitting">Baby-sitting</option>
+            <select v-model="category" required>
+              <option disabled value="">Sélectionner une catégorie</option>
+              <option
+                  v-for="item in categories"
+                  :key="item"
+                  :value="item"
+              >
+                {{ item }}
+              </option>
             </select>
 
             <input v-model.trim="availability" placeholder="Disponibilité" required />
@@ -93,7 +94,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Navbar from '@/components/Navbar.vue'
-import { getAnnonceById, updateAnnonce } from '@/services/annonces.service'
+import { getAnnonceById, updateAnnonce, getCategories } from '@/services/annonces.service'
 
 const route = useRoute()
 const router = useRouter()
@@ -107,12 +108,14 @@ const titre = ref('')
 const description = ref('')
 const type = ref('OFFER')
 const city = ref('')
-const category = ref('Cours')
+const category = ref('')
 const availability = ref('')
 const tarif_type = ref('FREE')
 const tarif = ref(0)
 const modality = ref('AT_CUSTOMER')
 const status = ref('DRAFT')
+
+const categories = ref([])
 
 const errorMessage = ref('')
 const successMessage = ref('')
@@ -128,6 +131,11 @@ function validateForm() {
 
   if (!description.value.trim()) {
     errorMessage.value = 'Description invalide'
+    return false
+  }
+
+  if (!category.value) {
+    errorMessage.value = 'Catégorie invalide'
     return false
   }
 
@@ -158,15 +166,34 @@ function validateForm() {
   return true
 }
 
+async function fetchCategories() {
+  const res = await getCategories()
+
+  if (!res.success) {
+    throw new Error('Impossible de récupérer les catégories')
+  }
+
+  categories.value = res.data.categories
+}
+
 async function fetchAnnonce() {
   try {
-    const res = await getAnnonceById(annonceId)
+    const [categoriesRes, annonceRes] = await Promise.all([
+      getCategories(),
+      getAnnonceById(annonceId)
+    ])
 
-    if (!res.success) {
+    if (!categoriesRes.success) {
+      throw new Error('Impossible de récupérer les catégories')
+    }
+
+    categories.value = categoriesRes.data.categories
+
+    if (!annonceRes.success) {
       throw new Error("Impossible de récupérer l'annonce")
     }
 
-    const annonceData = res.data.annonce.annonce
+    const annonceData = annonceRes.data.annonce.annonce
 
     titre.value = annonceData.titre
     description.value = annonceData.description

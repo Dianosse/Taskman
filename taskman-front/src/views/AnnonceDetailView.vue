@@ -289,6 +289,13 @@ async function handleCreateConversation() {
     const conversationId = res.data.conversation.id
     router.push(`/conversations/${conversationId}`)
   } catch (err) {
+    const existingConversationId = err.response?.data?.data?.conv?.id
+
+    if (existingConversationId) {
+      router.push(`/conversations/${existingConversationId}`)
+      return
+    }
+
     conversationError.value =
         err.response?.data?.error || err.message || 'Erreur lors de la création de la conversation'
   } finally {

@@ -72,6 +72,9 @@ async function createConversation(req, res) {
         if (conv) {
             return res.status(403).json({
                 success: false,
+                data : {
+                    conv
+                },
                 error: 'Une conversation existe déjà pour ces deux utilisateurs pour cette annonce'
             });
         }
@@ -181,6 +184,9 @@ async function sendMessage(req, res) {
             id_user,
             content
         });
+
+        const io = req.app.get('io');
+        io.to(`conversation_${id_conversation}`).emit('new_message', message);
 
         res.json({
             success: true,
