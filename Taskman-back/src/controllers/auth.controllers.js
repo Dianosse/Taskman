@@ -2,48 +2,77 @@ const userModel = require('../models/users')
 const passwordUtils = require('../utils/passwordHash');
 const jwtUtils = require('../utils/jwt');
 
-// TODO : vérifier les infos présentes ou pas
-
 async function registerUser(req, res) {
     try {
-        const {email, username, password, passwordConfirm, bio} = req.body;
+        const {email, username, password, passwordConfirm, bio, city} = req.body;
+
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-
-        if (password !== passwordConfirm) {
+        if (!email || !username || !password || !passwordConfirm || !bio || !city) {
             return res.status(400).json({
                 success: false,
-                error: 'Les mots de passe ne correspondent pas'
+                error: "Tous les champs sont obligatoires"
             });
         }
 
-        if (!passwordRegex.test(password)) {
+        if (username.trim().length < 3 || username.trim().length > 32) {
             return res.status(400).json({
                 success: false,
-                error: 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial'
+                error: "Username invalide"
+            });
+        }
+
+        if (bio.trim().length === 0 || bio.length > 100) {
+            return res.status(400).json({
+                success: false,
+                error: "Bio invalide"
+            });
+        }
+
+        if (city.trim().length === 0 || city.length > 32) {
+            return res.status(400).json({
+                success: false,
+                error: "Ville invalide"
             });
         }
 
         if (!emailRegex.test(email)) {
             return res.status(400).json({
                 success: false,
-                error: 'Format de mail invalide'
+                error: "Format de mail invalide"
             });
         }
 
+        if (email.length > 50) {
+            return res.status(400).json({
+                success: false,
+                error: "Email trop long"
+            });
+        }
+
+        if (password !== passwordConfirm) {
+            return res.status(400).json({
+                success: false,
+                error: "Les mots de passe ne correspondent pas"
+            });
+        }
+
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({
+                success: false,
+                error: "Mot de passe trop faible"
+            });
+        }
 
         const userExistant = await userModel.findOne({
-            where :
-                {
-                    email : email
-                }
+            where: { email }
         });
 
-        if(userExistant != null) {
+        if (userExistant) {
             return res.status(409).json({
                 success: false,
-                error: 'Email déjà utilisé'
+                error: "Email déjà utilisé"
             });
         }
 
@@ -53,7 +82,8 @@ async function registerUser(req, res) {
             email,
             password_hash,
             username,
-            bio
+            bio,
+            city
         });
 
         const token = jwtUtils.generateToken(user.id);
@@ -61,16 +91,20 @@ async function registerUser(req, res) {
         return res.status(201).json({
             success: true,
             token,
-            data : {
-                id : user.id,
-                email : user.email,
-                username : user.username,
-                bio : user.bio
+            data: {
+                id: user.id,
+                email: user.email,
+                username: user.username,
+                bio: user.bio,
+                city: user.city
             }
         });
 
-    } catch (error) {
-        res.status(400).json(error);
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 
@@ -103,14 +137,15 @@ async function loginUser(req, res) {
 
         const token = jwtUtils.generateToken(userExistant.id);
 
-        return res.json({
+        return res.status(201).json({
             success: true,
             token,
             data : {
                 id : userExistant.id,
                 email : userExistant.email,
                 username : userExistant.username,
-                bio : userExistant.bio
+                bio : userExistant.bio,
+                city : userExistant.city
             }
         });
 
@@ -121,14 +156,17 @@ async function loginUser(req, res) {
 
 async function logoutUser(req, res) {
     try{
-        res.json({
+        return res.status(201).json({
             success: true,
             data : {
                 message: "Utilisateur déconnecté avec succès"
             }
         });
-    } catch (error) {
-        res.status(400).json(error);
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 

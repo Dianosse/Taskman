@@ -45,6 +45,17 @@
               />
             </div>
 
+            <div class="form-group">
+              <label for="city">Ville</label>
+              <input
+                  id="city"
+                  v-model.trim="city"
+                  type="text"
+                  placeholder="Précisez votre ville"
+                  required
+              />
+            </div>
+
             <p v-if="successMessage" class="success-message">
               {{ successMessage }}
             </p>
@@ -84,6 +95,7 @@ const userId = ref(null)
 const email = ref('')
 const username = ref('')
 const bio = ref('')
+const city = ref('')
 
 const successMessage = ref('')
 const errorMessage = ref('')
@@ -132,6 +144,16 @@ function validateForm() {
     return false
   }
 
+  if (!city.value) {
+    errorMessage.value = "La ville est requise."
+    return false
+  }
+
+  if (city.value.length > 32) {
+    errorMessage.value = "La ville ne doit pas dépasser 32 caractères."
+    return false
+  }
+
   return true
 }
 
@@ -147,6 +169,7 @@ async function fetchProfile() {
     email.value = res.data.email
     username.value = res.data.username
     bio.value = res.data.bio || ''
+    city.value = res.data.city || ''
   } catch (err) {
     errorMessage.value =
         err.response?.data?.error || err.message || "Une erreur est survenue"
@@ -168,7 +191,8 @@ async function handleSubmit() {
     const res = await updateMyProfile(userId.value, {
       email: email.value,
       username: username.value,
-      bio: bio.value
+      bio: bio.value,
+      city : city.value
     })
 
     if (!res.success) {

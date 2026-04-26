@@ -8,10 +8,11 @@ async function getMyConversations(req, res) {
     try{
         const [allMyConversation] = await conversationModels.sequelize.query(
             `
-            select conv.*, u1.username as username1, u2.username as username2
+            select conv.*, u1.username as username1, u1.email as email1, u2.username as username2, u2.email as email2, a.titre as titre_annonce
             from conversations conv
             INNER JOIN users u1 ON conv.id_user1 = u1.id
             INNER JOIN users u2 ON conv.id_user2 = u2.id
+            INNER JOIN annonces a ON conv.id_annonce = a.id
             WHERE conv.id_user1 = :id_creator OR conv.id_user2 = :id_creator
             `,
             {
@@ -19,7 +20,7 @@ async function getMyConversations(req, res) {
             }
         );
 
-        res.json({
+        return res.status(201).json({
             success:true,
             data : {
                 allMyConversation
@@ -27,7 +28,10 @@ async function getMyConversations(req, res) {
         });
 
     } catch (err) {
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 
@@ -41,18 +45,21 @@ async function createConversation(req, res) {
         const annonce = await annonceModels.findByPk(id_annonce);
 
         if (!autre_user) {
-            return res.status(401).json({
+            return res.status(404).json({
                 success: false,
-                error: 'L\'utilisateur n\'existe pas'
+                error: "L'utilisateur n'existe pas"
             });
         }
-        if(!annonce) {
-            return res.status(401).json({
+
+        if (!annonce) {
+            return res.status(404).json({
                 success: false,
-                error: 'L\'annonce n\'existe pas'
+                error: "L'annonce n'existe pas"
             });
         }
+
         const id_user2_int = parseInt(id_user2);
+
         if (id_user1 === id_user2_int) {
             return res.status(400).json({
                 success: false,
@@ -70,12 +77,10 @@ async function createConversation(req, res) {
         });
 
         if (conv) {
-            return res.status(403).json({
+            return res.status(409).json({
                 success: false,
-                data : {
-                    conv
-                },
-                error: 'Une conversation existe déjà pour ces deux utilisateurs pour cette annonce'
+                data: { conv },
+                error: "Une conversation existe déjà pour ces deux utilisateurs pour cette annonce"
             });
         }
 
@@ -95,16 +100,18 @@ async function createConversation(req, res) {
             id_user2 : id2
         });
 
-        res.json({
+        return res.status(201).json({
             success: true,
-            data : {
+            data: {
                 conversation
             }
         });
 
     } catch (err) {
-        console.log(err);
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 
@@ -114,10 +121,10 @@ async function getMessageFromConversation(req, res) {
         const id_conversation = req.params.id;
         const conversation = await conversationModels.findByPk(id_conversation);
 
-        if(!conversation) {
-            return res.status(401).json({
+        if (!conversation) {
+            return res.status(404).json({
                 success: false,
-                error: 'La conversation n\'existe pas'
+                error: "La conversation n'existe pas"
             });
         }
 
@@ -137,7 +144,7 @@ async function getMessageFromConversation(req, res) {
             ]
         });
 
-        res.json({
+        return res.status(201).json({
            success: true,
            data : {
                allMessages
@@ -145,7 +152,10 @@ async function getMessageFromConversation(req, res) {
         });
 
     } catch (err) {
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 
@@ -165,17 +175,17 @@ async function sendMessage(req, res) {
 
         const conversation = await conversationModels.findByPk(id_conversation);
 
-        if(!conversation) {
-            return res.status(401).json({
+        if (!conversation) {
+            return res.status(404).json({
                 success: false,
-                error: 'La conversation n\'existe pas'
+                error: "La conversation n'existe pas"
             });
         }
 
-        if(!(id_user === conversation.id_user1 || id_user === conversation.id_user2)) {
-            return res.status(401).json({
+        if (!(id_user === conversation.id_user1 || id_user === conversation.id_user2)) {
+            return res.status(403).json({
                 success: false,
-                error: 'L\'utilisateur ne fait pas parti de cette conversation'
+                error: "L'utilisateur ne fait pas partie de cette conversation"
             });
         }
 
@@ -188,15 +198,16 @@ async function sendMessage(req, res) {
         const io = req.app.get('io');
         io.to(`conversation_${id_conversation}`).emit('new_message', message);
 
-        res.json({
+        return res.status(201).json({
             success: true,
-            data : {
-                message
-            }
+            data: { message }
         });
 
     } catch (err) {
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 

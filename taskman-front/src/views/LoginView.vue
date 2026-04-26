@@ -33,12 +33,12 @@ const router = useRouter()
 function validateForm() {
 
   if (!email.value) {
-    error.value = 'Email is required.';
+    error.value = 'Veuillez renseigner votre email.';
     return false;
   }
 
   if (!password.value) {
-    error.value = 'Password is required.';
+    error.value = 'Veuillez renseigner votre mot de passe.';
     return false;
   }
 

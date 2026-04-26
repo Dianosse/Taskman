@@ -24,6 +24,10 @@ const Users = db.define('users', {
   bio: {
     type: DataTypes.STRING(100),
     allowNull: false
+  },
+  city: {
+    type: DataTypes.STRING(32),
+    allowNull: false
   }
 }, {
   db,

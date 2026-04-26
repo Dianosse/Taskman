@@ -17,6 +17,7 @@
             <h1>{{ user.username }}</h1>
             <p class="email">{{ user.email }}</p>
             <p class="bio">{{ user.bio || 'Aucune bio renseignée.' }}</p>
+            <p class="city"> {{ user.city || 'Aucune ville renseignée'}}</p>
           </div>
 
           <div class="user-actions">
@@ -136,6 +137,11 @@ onMounted(fetchUserData)
 }
 
 .bio {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.city {
   margin: 0;
   line-height: 1.5;
 }

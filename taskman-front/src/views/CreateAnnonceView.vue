@@ -80,6 +80,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Navbar from '@/components/Navbar.vue'
 import { createAnnonce, getCategories } from '@/services/annonces.service'
+import {getMyProfile} from "@/services/users.service.js";
 
 const router = useRouter()
 
@@ -99,15 +100,21 @@ const categories = ref([])
 const error = ref('')
 const loading = ref(false)
 
-async function fetchCategories() {
+async function fetchCategoriesAndUserCity() {
   try {
-    const res = await getCategories()
+    const res_cate = await getCategories();
+    const res_user = await getMyProfile();
 
-    if (!res.success) {
-      throw new Error('Impossible de récupérer les catégories')
+    if (!res_cate.success) {
+      throw new Error('Impossible de récupérer les catégories');
     }
 
-    categories.value = res.data.categories
+    if (!res_user.success) {
+      throw new Error("Impossible de récupérer l'utilisateur");
+    }
+
+    categories.value = res_cate.data.categories;
+    city.value = res_user.data.city;
   } catch (err) {
     error.value =
         err.response?.data?.error || err.message || 'Erreur lors du chargement des catégories'
@@ -169,7 +176,7 @@ async function handleSubmit() {
   }
 }
 
-onMounted(fetchCategories)
+onMounted(fetchCategoriesAndUserCity)
 </script>
 
 <style scoped>

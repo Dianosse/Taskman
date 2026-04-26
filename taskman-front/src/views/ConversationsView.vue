@@ -25,15 +25,11 @@
             class="conversation-card"
         >
           <h2>
-            Conversation #{{ conversation.id }}
+            Discussion avec {{ getOtherUsername(conversation) }}
           </h2>
 
           <p>
-            <strong>Utilisateur 1 :</strong> {{ conversation.username1 }}
-          </p>
-
-          <p>
-            <strong>Utilisateur 2 :</strong> {{ conversation.username2 }}
+            <strong>Annonce :</strong> {{ conversation.titre_annonce }}
           </p>
 
           <p class="open-text">Ouvrir la conversation</p>
@@ -51,9 +47,28 @@ import { getMyConversations } from '@/services/conversations.service'
 const conversations = ref([])
 const loading = ref(true)
 const error = ref('')
+const currentUser = ref(null)
+
+function getOtherUsername(conversation) {
+  if (!currentUser.value) {
+    return 'utilisateur'
+  }
+
+  if (conversation.email1 === currentUser.value.email) {
+    return conversation.username2
+  }
+
+  return conversation.username1
+}
 
 async function fetchConversations() {
   try {
+    const storedUser = localStorage.getItem('user')
+
+    if (storedUser) {
+      currentUser.value = JSON.parse(storedUser)
+    }
+
     const res = await getMyConversations()
 
     if (!res.success) {

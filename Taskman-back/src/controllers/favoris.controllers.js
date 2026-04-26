@@ -16,7 +16,7 @@ async function allFavoris(req, res) {
             }
         );
 
-        return res.json({
+        return res.status(201).json({
             success: true,
             data: {
                 allFavoris
@@ -24,8 +24,10 @@ async function allFavoris(req, res) {
         });
 
     } catch (err) {
-        console.log(err);
-        return res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 
@@ -36,9 +38,9 @@ async function addFavoris(req, res) {
 
         const annonce = await annonceModels.findByPk(id_annonce);
         if (!annonce) {
-            return res.status(403).json({
+            return res.status(404).json({
                 success: false,
-                error: 'L\'annonce n\'existe pas'
+                error: "L'annonce n'existe pas"
             });
         }
 
@@ -48,10 +50,11 @@ async function addFavoris(req, res) {
                 id_annonce
             }
         });
-        if(fav) {
-            return res.status(403).json({
+
+        if (fav) {
+            return res.status(409).json({
                 success: false,
-                error: 'Cette annonce est déjà en favoris pour cet utilisateur'
+                error: "Cette annonce est déjà en favoris pour cet utilisateur"
             });
         }
 
@@ -60,15 +63,16 @@ async function addFavoris(req, res) {
             id_annonce
         });
 
-        res.json({
+        return res.status(201).json({
             success: true,
-            data: {
-                favoris
-            }
+            data: { favoris }
         });
 
     } catch (err) {
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 
@@ -85,22 +89,25 @@ async function deleteFavoris(req, res) {
                 }
         });
 
-        if(!favoris) {
-            return res.status(401).json({
+        if (!favoris) {
+            return res.status(404).json({
                 success: false,
-                error: 'Ce favoris n\'existe pas'
+                error: "Ce favoris n'existe pas"
             });
         }
 
         await favoris.destroy();
 
-        res.status(201).json({
+        return res.status(200).json({
             success: true,
-            infos : "Favoris delete avec succès"
+            infos: "Favoris supprimé avec succès"
         });
 
     } catch (err) {
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 

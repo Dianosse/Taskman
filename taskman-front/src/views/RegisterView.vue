@@ -8,6 +8,7 @@
       <input v-model="password" type="password" placeholder="Password" required />
       <input v-model="passwordConfirm" type="password" placeholder="Confirm password" required />
       <input v-model.trim="bio" type="text" placeholder="Bio" required />
+      <input v-model.trim="city" type="text" placeholder="Ville" required/>
 
       <button type="submit">Créer un compte</button>
     </form>
@@ -31,6 +32,7 @@ const email = ref('');
 const password = ref('');
 const passwordConfirm = ref('');
 const bio = ref('');
+const city = ref('');
 const error = ref('');
 
 const router = useRouter();
@@ -49,27 +51,27 @@ function validateForm() {
   error.value = '';
 
   if (!username.value) {
-    error.value = 'Username is required.';
+    error.value = 'Veuillez renseigner un pseudo.';
     return false;
   }
 
   if (username.value.length < 3) {
-    error.value = 'Username must contain at least 3 characters.';
+    error.value = 'Le pseudo doit au moins faire 3 caractères.';
     return false;
   }
 
   if (username.value.length > 32) {
-    error.value = 'Username must not exceed 32 characters.';
+    error.value = 'Le pseudo ne doit pas dépasser 32 caractères.';
     return false;
   }
 
   if (!email.value) {
-    error.value = 'Email is required.';
+    error.value = 'Veuillez renseigner un email.';
     return false;
   }
 
   if (!isValidEmail(email.value)) {
-    error.value = 'Invalid email format.';
+    error.value = 'Format de mail invalide.';
     return false;
   }
 
@@ -80,34 +82,50 @@ function validateForm() {
 
   if (!isStrongPassword(password.value)) {
     error.value =
-        'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.';
+        'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial';
     return false;
   }
 
   if (!passwordConfirm.value) {
-    error.value = 'Password confirmation is required.';
+    error.value = 'Veuilez remplir le champs de confirmation du mot de passe.';
     return false;
   }
 
   if (password.value !== passwordConfirm.value) {
-    error.value = 'Passwords do not match.';
+    error.value = 'Les mots de passe ne correspondent pas.';
     return false;
   }
 
   if (!bio.value) {
-    error.value = 'Bio is required.';
+    error.value = 'Veuillez renseigner une bio.';
     return false;
   }
 
   if (bio.value.length < 3) {
-    error.value = 'Bio must contain at least 3 characters.';
+    error.value = 'La bio doit contenir au moins 3 caractères.';
     return false;
   }
 
   if (bio.value.length > 100) {
-    error.value = 'Bio must not exceed 100 characters.';
+    error.value = 'La bio ne doit pas dépasser 100 caractères.';
     return false;
   }
+
+  if (!city.value) {
+    error.value = 'Veuillez renseigner la ville.';
+    return false;
+  }
+
+  if (city.value.length < 1) {
+    error.value = 'La ville doit contenir au moins 1 caractère.';
+    return false;
+  }
+
+  if (city.value.length > 32) {
+    error.value = 'La ville ne doit pas dépasser 32 caractères.';
+    return false;
+  }
+
   return true;
 }
 
@@ -123,7 +141,8 @@ async function handleRegister() {
       email: email.value,
       password: password.value,
       passwordConfirm: passwordConfirm.value,
-      bio: bio.value
+      bio: bio.value,
+      city: city.value
     });
 
     if (!res.success) {

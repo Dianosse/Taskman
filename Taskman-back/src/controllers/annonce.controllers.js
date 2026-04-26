@@ -53,7 +53,7 @@ async function allAnnonces(req, res) {
             offset
         });
 
-        res.json({
+        return res.status(201).json({
             success: true,
             data: {
                 annonces: rows
@@ -66,7 +66,10 @@ async function allAnnonces(req, res) {
             }
         });
     } catch (err) {
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 
@@ -77,15 +80,15 @@ async function getAnnonceById(req, res) {
         const annonce = await annoncesModels.findByPk(annonce_id);
 
         if (!annonce) {
-            return res.status(401).json({
+            return res.status(404).json({
                 success: false,
-                error: 'L\'annonce n\'existe pas'
+                error: "L'annonce n'existe pas"
             });
         }
 
         const user = await usersModels.findByPk(annonce.id_creator);
 
-        res.json({
+        return res.status(201).json({
             success: true,
             data : {
                 annonce : {
@@ -99,7 +102,10 @@ async function getAnnonceById(req, res) {
         });
 
     } catch (err) {
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 
@@ -172,7 +178,7 @@ async function createAnnonce(req, res) {
             id_creator
         });
 
-        res.json({
+        return res.status(201).json({
             success: true,
             data: {
                 annonce
@@ -180,7 +186,10 @@ async function createAnnonce(req, res) {
         });
 
     } catch (err) {
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 
@@ -190,17 +199,17 @@ async function modifyAnnonce(req, res) {
 
         const annonce = await annoncesModels.findByPk(annonce_id);
 
-        if(!annonce) {
-            return res.status(401).json({
+        if (!annonce) {
+            return res.status(404).json({
                 success: false,
-                error: 'L\'annonce n\'existe pas'
+                error: "L'annonce n'existe pas"
             });
         }
 
         if (req.user.id !== annonce.id_creator) {
-            return res.status(401).json({
+            return res.status(403).json({
                 success: false,
-                error: 'Impossible de modifier une annonce qu\'on a pas créé'
+                error: "Impossible de modifier une annonce qu'on n'a pas créée"
             });
         }
 
@@ -307,7 +316,7 @@ async function modifyAnnonce(req, res) {
                 status
             });
 
-        res.json({
+        return res.status(201).json({
             success: true,
             data : {
                 annonce
@@ -315,7 +324,10 @@ async function modifyAnnonce(req, res) {
         });
 
     } catch (err) {
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 
@@ -325,29 +337,32 @@ async function deleteAnnonce(req, res) {
 
         const annonce = await annoncesModels.findByPk(annonce_id);
 
-        if(!annonce) {
-            return res.status(401).json({
+        if (!annonce) {
+            return res.status(404).json({
                 success: false,
-                error: 'L\'annonce n\'existe pas'
+                error: "L'annonce n'existe pas"
             });
         }
 
         if (req.user.id !== annonce.id_creator) {
-            return res.status(401).json({
+            return res.status(403).json({
                 success: false,
-                error: 'Impossible de supprimer une annonce qu\'on a pas créé'
+                error: "Impossible de supprimer une annonce qu'on n'a pas créée"
             });
         }
 
         await annonce.destroy();
 
-        res.status(201).json({
+        return res.status(200).json({
             success: true,
-            infos : "Annonce delete avec succès"
+            infos: "Annonce supprimée avec succès"
         });
 
     } catch (err) {
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 
@@ -357,19 +372,19 @@ async function changeAnnonceStatus(req, res) {
 
         const annonce = await annoncesModels.findByPk(annonce_id);
 
-        if(!annonce) {
-            return res.status(401).json({
+        if (!annonce) {
+            return res.status(404).json({
                 success: false,
-                error: 'L\'annonce n\'existe pas'
+                error: "L'annonce n'existe pas"
             });
         }
 
         const id_creator = req.user.id;
 
         if (annonce.id_creator !== id_creator) {
-            return res.status(400).json({
+            return res.status(403).json({
                 success: false,
-                error: "cette annonce n'appartient pas à cette utilisateur"
+                error: "Cette annonce n'appartient pas à cet utilisateur"
             });
         }
 
@@ -387,7 +402,7 @@ async function changeAnnonceStatus(req, res) {
             status
         });
 
-        res.json({
+        return res.status(201).json({
             success: true,
             data : {
                 annonce
@@ -395,13 +410,16 @@ async function changeAnnonceStatus(req, res) {
         });
 
     } catch (err) {
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 
 async function getCategoriesPossible(req, res) {
     try {
-        res.json({
+        return res.status(201).json({
             success: true,
             data : {
                 categories : [
@@ -416,7 +434,10 @@ async function getCategoriesPossible(req, res) {
             }
         });
     } catch (err) {
-        res.status(400).json(err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 }
 

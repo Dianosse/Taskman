@@ -166,16 +166,6 @@ function validateForm() {
   return true
 }
 
-async function fetchCategories() {
-  const res = await getCategories()
-
-  if (!res.success) {
-    throw new Error('Impossible de récupérer les catégories')
-  }
-
-  categories.value = res.data.categories
-}
-
 async function fetchAnnonce() {
   try {
     const [categoriesRes, annonceRes] = await Promise.all([

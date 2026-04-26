@@ -4,6 +4,7 @@ CREATE TABLE Users (
                        password_hash TEXT NOT NULL,
                        username VARCHAR(32) NOT NULL,
                        bio VARCHAR(100) NOT NULL,
+                       city VARCHAR(32) NOT NULL,
                        CONSTRAINT PK_User PRIMARY KEY(id)
 );
 

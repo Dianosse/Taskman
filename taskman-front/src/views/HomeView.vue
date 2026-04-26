@@ -5,7 +5,55 @@
     <main class="home">
       <h1>Liste des annonces</h1>
 
-      <div class="grid">
+      <section class="filters">
+        <select v-model="filters.type">
+          <option value="">Tous les types</option>
+          <option value="OFFER">Offre</option>
+          <option value="REQUEST">Demande</option>
+        </select>
+
+        <select v-model="filters.category">
+          <option value="">Toutes les catégories</option>
+          <option
+              v-for="category in categories"
+              :key="category"
+              :value="category"
+          >
+            {{ category }}
+          </option>
+        </select>
+
+        <input
+            v-model.trim="filters.city"
+            type="text"
+            placeholder="Ville"
+        />
+
+        <select v-model="filters.sort">
+          <option value="">Tri par défaut</option>
+          <option value="recent">Plus récent</option>
+          <option value="price_asc">Tarif croissant</option>
+          <option value="price_desc">Tarif décroissant</option>
+        </select>
+
+        <button @click="applyFilters">
+          Rechercher
+        </button>
+
+        <button @click="resetFilters" class="reset-btn">
+          Réinitialiser
+        </button>
+      </section>
+
+      <p v-if="activeSearch" class="search-info">
+        Résultats pour : {{ activeSearch }}
+      </p>
+
+      <div v-if="annonces.length === 0" class="empty-state">
+        Aucune annonce trouvée.
+      </div>
+
+      <div v-else class="grid">
         <AnnonceCard
             v-for="annonce in annonces"
             :key="annonce.id"
@@ -45,36 +93,99 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import Navbar from '@/components/Navbar.vue'
 import AnnonceCard from '@/components/AnnonceCard.vue'
-import { getAnnonces } from '@/services/annonces.service'
-import { useRoute } from 'vue-router'
+import { getAnnonces, getCategories } from '@/services/annonces.service'
+import { useRoute, useRouter } from 'vue-router'
+
+const route = useRoute()
+const router = useRouter()
 
 const annonces = ref([])
+const categories = ref([])
+
 const page = ref(1)
 const limit = ref(8)
 const totalPages = ref(1)
-const route = useRoute()
-
 const limitOptions = [8, 16, 24, 32]
 
-async function fetchAnnonces() {
+const filters = ref({
+  search: '',
+  type: '',
+  category: '',
+  city: '',
+  sort: ''
+})
+
+const activeSearch = computed(() => route.query.search || '')
+
+function syncFiltersFromRoute() {
+  filters.value.search = route.query.search || ''
+  filters.value.type = route.query.type || ''
+  filters.value.category = route.query.category || ''
+  filters.value.city = route.query.city || ''
+  filters.value.sort = route.query.sort || ''
+}
+
+async function fetchCategories() {
   try {
-    const search = route.query.search || ''
+    const res = await getCategories()
 
-    const res = await getAnnonces(page.value, limit.value, search)
-
-    annonces.value = res.data.annonces
-    totalPages.value = res.pagination.totalPages
+    if (res.success) {
+      categories.value = res.data.categories
+    }
   } catch (err) {
     console.error(err)
   }
 }
 
-onMounted(fetchAnnonces)
+async function fetchAnnonces() {
+  try {
+    const res = await getAnnonces(page.value, limit.value, {
+      search: route.query.search || '',
+      type: route.query.type || '',
+      category: route.query.category || '',
+      city: route.query.city || '',
+      sort: route.query.sort || ''
+    })
 
-watch(page, fetchAnnonces)
+    annonces.value = res.data.annonces
+    totalPages.value = res.pagination.totalPages || 1
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+function applyFilters() {
+  page.value = 1
+
+  const query = {}
+
+  if (filters.value.search) query.search = filters.value.search
+  if (filters.value.type) query.type = filters.value.type
+  if (filters.value.category) query.category = filters.value.category
+  if (filters.value.city) query.city = filters.value.city
+  if (filters.value.sort) query.sort = filters.value.sort
+
+  router.push({
+    path: '/',
+    query
+  })
+}
+
+function resetFilters() {
+  filters.value = {
+    search: '',
+    type: '',
+    category: '',
+    city: '',
+    sort: ''
+  }
+
+  page.value = 1
+  router.push({ path: '/' })
+}
 
 function nextPage() {
   if (page.value < totalPages.value) {
@@ -98,11 +209,22 @@ async function changeLimit(newLimit) {
   await fetchAnnonces()
 }
 
-watch(() => route.query.search, () => {
-  page.value = 1
-  fetchAnnonces()
+onMounted(async () => {
+  syncFiltersFromRoute()
+  await fetchCategories()
+  await fetchAnnonces()
 })
 
+watch(page, fetchAnnonces)
+
+watch(
+    () => route.query,
+    async () => {
+      page.value = 1
+      syncFiltersFromRoute()
+      await fetchAnnonces()
+    }
+)
 </script>
 
 <style scoped>
@@ -110,6 +232,60 @@ watch(() => route.query.search, () => {
   max-width: 1200px;
   margin: 30px auto;
   padding: 0 20px;
+}
+
+.filters {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: white;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.filters input,
+.filters select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.filters button {
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: darkorange;
+  color: darkblue;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.filters button:hover {
+  background: darkblue;
+  color: darkorange;
+}
+
+.reset-btn {
+  background: #111 !important;
+  color: white !important;
+}
+
+.search-info {
+  margin-top: 16px;
+  color: #666;
+  font-weight: 500;
+}
+
+.empty-state {
+  margin-top: 20px;
+  padding: 30px 20px;
+  text-align: center;
+  border: 1px dashed #ccc;
+  border-radius: 12px;
+  color: #666;
+  background: #fafafa;
 }
 
 .grid {

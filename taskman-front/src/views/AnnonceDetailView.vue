@@ -100,6 +100,15 @@
         </router-link>
 
         <button
+            v-if="currentUser && isOwnAnnonce"
+            class="delete-btn"
+            @click="handleDelete"
+            :disabled="deleteLoading"
+        >
+          {{ deleteLoading ? 'Supprression...' : "Supprimer l'annonce" }}
+        </button>
+
+        <button
             v-if="currentUser && !isOwnAnnonce && !isFavorite"
             class="favorite-btn"
             @click="handleAddFavori"
@@ -133,7 +142,7 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getAnnonceById } from '@/services/annonces.service'
+import {deleteAnnonce, getAnnonceById} from '@/services/annonces.service'
 import { addFavori, getMesFavoris, removeFavori } from '@/services/favoris.service'
 import { createConversation } from '@/services/conversations.service'
 import Navbar from '@/components/Navbar.vue'
@@ -150,6 +159,10 @@ const favoriteLoading = ref(false)
 const favoriteSuccess = ref('')
 const favoriteError = ref('')
 const isFavorite = ref(false)
+
+const deleteLoading = ref(false)
+const deleteSuccess = ref('')
+const deleteError = ref('')
 
 const conversationLoading = ref(false)
 const conversationError = ref('')
@@ -227,6 +240,27 @@ async function fetchAnnonce() {
     error.value = err.response?.data?.error || "Erreur serveur"
   } finally {
     loading.value = false
+  }
+}
+
+async function handleDelete() {
+  try {
+    deleteLoading.value = true
+    deleteSuccess.value = ''
+    deleteError.value = ''
+
+    const res = await deleteAnnonce(annonce.value.annonce.id)
+
+    if (!res.success) {
+      throw new Error("Impossible de supprimer l'annonce")
+    }
+
+    deleteSuccess.value = 'Annonce supprimée'
+    router.push('/')
+  } catch (err) {
+    deleteError.value = err.response?.data?.error || err.message || "Erreur lors de la suppression de l'annonce"
+  } finally {
+    deleteLoading.value = false
   }
 }
 
@@ -482,6 +516,15 @@ onMounted(fetchAnnonce)
   background: #111;
   color: white;
   border: 1px solid #111;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.delete-btn {
+  padding: 12px 18px;
+  color: red;
+  border: 1px solid red;
   border-radius: 8px;
   text-decoration: none;
   font-weight: 700;
