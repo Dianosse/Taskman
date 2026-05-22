@@ -2,6 +2,10 @@ const usersModels = require('../models/users');
 const annonceModels = require('../models/annonces');
 
 
+/**
+ * Retourne les informations relatives à un utilisateur via l'id envoyé
+ * @Condition : un utilisateur dans la BD doit contenir cet ID
+ */
 async function getUserById(req, res) {
     try {
         const id = req.params.id;
@@ -30,6 +34,9 @@ async function getUserById(req, res) {
     }
 }
 
+/**
+ * Retourne les informations relatives à l'utilisateur actuellement connecté
+ */
 async function getInfos(req, res) {
     try {
         return res.status(201).json({
@@ -50,6 +57,12 @@ async function getInfos(req, res) {
     }
 }
 
+
+/**
+ * Permet de modifier les informations relatives à l'utilisateur actuellement connecté
+ * Possible de modifier email, pseudo, bio, city
+ * @Conditions : la nouvelle version des champs doit être au bon format et ne doit pas interférer avec des utilisateurs déjà stockés (au niveau de l'email)
+ */
 async function changeInfosUserById(req, res) {
     try {
         const id_user = req.params.id;
@@ -141,6 +154,10 @@ async function changeInfosUserById(req, res) {
     }
 }
 
+
+/**
+ * Supprime l'utilisateur actuellement connecté
+ */
 async function deleteUserById(req, res) {
     try {
         const user_id = req.params.id;
@@ -176,6 +193,10 @@ async function deleteUserById(req, res) {
     }
 }
 
+
+/**
+ * Retourne toutes les annonces que l'utilisateur actuellement connecté à créés
+ */
 async function getMesAnnonces(req, res) {
     try {
         const mesAnnonces = await annonceModels.findAll({
@@ -198,6 +219,10 @@ async function getMesAnnonces(req, res) {
     }
 }
 
+
+/**
+ * Retourne toutes les annonces qui ont été créé par l'utilisateur dont l'ID est envoyé
+ */
 async function getAnnoncesByUser(req, res) {
     try {
         const id = parseInt(req.params.id)

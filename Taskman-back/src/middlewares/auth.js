@@ -1,6 +1,14 @@
 const jwt = require("jsonwebtoken");
 const userModel = require('../models/users');
 
+
+/**
+ * Middleware qui permet la protection des routes.
+ * Vérifie la présence d'un token JWT dans le header Authorization, contrôle sa validité puis récupère l'utilisateur connecté en base
+ * @Conditions :
+ *  - le token doit encore être valide
+ *  - l'ID doit correspondre à un utilisateur existant
+ */
 async function protect(req, res, next) {
     try {
         let token;
@@ -39,6 +47,7 @@ async function protect(req, res, next) {
             });
         }
 
+        // permet de stocker l'utilisateur connecté pour qu'il puisse être utilisé facilement dans les fonctions qui suivent
         req.user = user;
         return next();
     } catch (err) {

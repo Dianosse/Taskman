@@ -4,6 +4,9 @@ const usersModels = require('../models/users');
 const messageModels = require('../models/messages');
 const { Op } = require('sequelize');
 
+/**
+ * Retourne toutes les conversations qui ont comme participant l'utilisateur actuellement connecté
+ */
 async function getMyConversations(req, res) {
     try{
         const [allMyConversation] = await conversationModels.sequelize.query(
@@ -35,6 +38,15 @@ async function getMyConversations(req, res) {
     }
 }
 
+
+/**
+ * Créé une conversation entre l'utilisateur actuellement connecté et l'utilisateur dont l'ID est envoyé
+ * @Conditions :
+ *  - l'utilisateur dont l'ID est envoyé doit exister en BD
+ *  - l'annonce relative à cette conversation doit exister
+ *  - l'ID de l'utilisateur actuellement connecté et l'ID envoyé ne doivent pas être identiques (impossible de créer une conversation avec soi-même)
+ *  - il ne doit pas déjà y avoir de conversation entre ces deux utilisateurs pour cette annonce
+ */
 async function createConversation(req, res) {
     try {
         const id_user1 = req.user.id;
@@ -84,6 +96,7 @@ async function createConversation(req, res) {
             });
         }
 
+        // permet de respecter le check BD "CK_Con_user_order"
         let id1;
         let id2;
         if (id_user1 > id_user2_int) {
@@ -116,6 +129,12 @@ async function createConversation(req, res) {
 }
 
 
+/**
+ * Retourne les messages d'une conversation dont l'ID est envoyé
+ * @Conditions :
+ *  - cette conversation doit exister
+ *  - l'utilisateur actuellement connecté doit faire partie de cette conversation
+ */
 async function getMessageFromConversation(req, res) {
     try {
         const id_conversation = req.params.id;
@@ -131,10 +150,11 @@ async function getMessageFromConversation(req, res) {
         if (!(req.user.id === conversation.id_user1 || req.user.id === conversation.id_user2)) {
             return res.status(403).json({
                 success: false,
-                error: 'L\'utilisateur connecté ne fait pas parti de cette conversation'
+                error: 'L\'utilisateur connecté ne fait pas partie de cette conversation'
             });
         }
 
+        // renvoie tous les messages de la conversation dans l'ordre croissant selon la date d'envoie des messages
         const allMessages = await messageModels.findAll({
             where : {
                 id_conversation : id_conversation
@@ -159,6 +179,15 @@ async function getMessageFromConversation(req, res) {
     }
 }
 
+
+/**
+ * Réception et stockage en BD d'un message d'une conversation dont l'ID est envoyé.
+ * Utilisation de WebSocket pour gérer la messagerie en temps réel.
+ * @Conditions :
+ *  - le message ne doit pas être vide
+ *  - la conversation dont l'ID est envoyé doit exister en BD
+ *  - l'utilisateur actuellement connecté doit fait parti de la conversation dont l'ID est envoyé
+ */
 async function sendMessage(req, res) {
     try {
         const id_user = req.user.id;
@@ -195,6 +224,7 @@ async function sendMessage(req, res) {
             content
         });
 
+        // envoi du message au front
         const io = req.app.get('io');
         io.to(`conversation_${id_conversation}`).emit('new_message', message);
 

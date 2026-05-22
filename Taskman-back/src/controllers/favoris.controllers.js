@@ -2,6 +2,9 @@ const favorisModels = require('../models/favoris');
 const annonceModels = require('../models/annonces');
 
 
+/**
+ * Retourne toutes les annonces que l'utilisateur actuellement connecté a ajoutées en favoris
+ */
 async function allFavoris(req, res) {
     try {
         const [allFavoris] = await annonceModels.sequelize.query(
@@ -31,6 +34,12 @@ async function allFavoris(req, res) {
     }
 }
 
+/**
+ * Ajoute en favoris l'annonce dont l'ID est envoyé
+ * @Conditions :
+ *  - l'annonce dont l'ID est envoyé doit exister en BD
+ *  - L'utilisateur actuellement connecté ne doit pas avoir déjà ajouté cette annonce en favoris
+ */
 async function addFavoris(req, res) {
     try {
         const id_user = req.user.id;
@@ -76,6 +85,10 @@ async function addFavoris(req, res) {
     }
 }
 
+/**
+ * Supprime des favoris de l'utilisateur actuellement connecté l'annonce dont l'ID est envoyé
+ * @Condition : L'utilisateur actuellement connecté doit avoir cette annonce en favoris
+ */
 async function deleteFavoris(req, res) {
     try {
         const id_user = req.user.id;

@@ -2,6 +2,11 @@ const userModel = require('../models/users')
 const passwordUtils = require('../utils/passwordHash');
 const jwtUtils = require('../utils/jwt');
 
+/**
+ * Permet la création d'un compte, tous les champs (email, username, password, passwordConfirm, bio, city) doivent être présents dans le bon format
+ * Condition mot de passe : au moins 8 caractères / une minuscule / une majuscule / un caractère spécial / un chiffre
+ * @Condition : aucun autre utilisateur ne doit avoir l'email de ce nouveau compte
+ */
 async function registerUser(req, res) {
     try {
         const {email, username, password, passwordConfirm, bio, city} = req.body;
@@ -65,6 +70,7 @@ async function registerUser(req, res) {
             });
         }
 
+        // recherche d'un utilisateur contenant l'email envoyé depuis le front
         const userExistant = await userModel.findOne({
             where: { email }
         });
@@ -76,6 +82,7 @@ async function registerUser(req, res) {
             });
         }
 
+        // récupération du mot de passe version hash avant stockage en BD
         const password_hash = await passwordUtils.hashPassword(password);
 
         const user = await userModel.create({
@@ -108,10 +115,15 @@ async function registerUser(req, res) {
     }
 }
 
+/**
+ * Connexion à un compte existant via l'email et le mot de passe
+ * @Condition : un utilisateur avec cet email doit exister et le mot de passe doit être valide
+ */
 async function loginUser(req, res) {
     try {
         const {email, password} = req.body;
 
+        // recherche d'un utilisateur contenant l'email envoyé depuis le front
         const userExistant = await userModel.findOne({
             where :
                 {

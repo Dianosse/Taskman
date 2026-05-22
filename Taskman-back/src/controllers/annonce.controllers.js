@@ -2,6 +2,13 @@ const annoncesModels = require('../models/annonces');
 const usersModels = require('../models/users');
 const { Op } = require("sequelize");
 
+
+/**
+ * Retourne toutes les annonces publiées qui correspondent aux potentiels filtres
+ * Possibilité de filtrage via mots clefs (titre/description) / type / catégorie / city
+ * Il est également possible de filtrer le résultat par ordre croissant ou décroissant selon le prix de l'annonce
+ * Pagination du résultat
+ */
 async function allAnnonces(req, res) {
     try {
         const { search, type, category, city, sort } = req.query;
@@ -10,6 +17,7 @@ async function allAnnonces(req, res) {
         const limit = Math.min(parseInt(req.query.limit) || 10, 50);
         const offset = (page - 1) * limit;
 
+        // construction des filtres selon les paramètres envoyés
         const where = {
             status: "PUBLISHED"
         };
@@ -46,6 +54,7 @@ async function allAnnonces(req, res) {
             order.push(["tarif", "DESC"]);
         }
 
+        // Récupère les annonces voulues mais également le nombre d'annonces qu'il y a
         const { count, rows } = await annoncesModels.findAndCountAll({
             where,
             order,
@@ -73,6 +82,12 @@ async function allAnnonces(req, res) {
     }
 }
 
+
+/**
+ * Retourne les informations relatives à une annonce dont l'ID est envoyé.
+ * Retourne également des informations basiques concernant l'utilisateur qui est le créateur de cette annonce.
+ * @Condition : L'annonce dont l'ID est envoyé doit exister en BD
+ */
 async function getAnnonceById(req, res) {
     try {
         const annonce_id = req.params.id;
@@ -109,12 +124,18 @@ async function getAnnonceById(req, res) {
     }
 }
 
+
+/**
+ * Crée une annonce selon les paramètres envoyés.
+ * Tous les champs doivent être présents et dans le bon format
+ */
 async function createAnnonce(req, res) {
     try {
         const {titre, description, type, city, category, availability, tarif_type, tarif, modality, status} = req.body;
 
         const id_creator = req.user.id;
 
+        // listes fixes des catégories et des modalités possibles
         const categories = ["Design", "Cours", "Bricolage", "Cuisine", "Informatique", "Aide", "Baby-sitting"];
         const modalities = ["REMOTE", "AT_PROVIDER", "AT_CUSTOMER"];
 
@@ -193,6 +214,14 @@ async function createAnnonce(req, res) {
     }
 }
 
+
+/**
+ * Permet la modification d'une annonce dont l'ID est envoyé.
+ * @Conditions :
+ *  - l'ID envoyé doit correspondre à une annonce existante
+ *  - l'utilisateur actuellement connecté doit être le créateur de cette annonce
+ *  - la nouvelle version des champs doit être au bon format
+ */
 async function modifyAnnonce(req, res) {
     try {
         const annonce_id = req.params.id;
@@ -331,6 +360,13 @@ async function modifyAnnonce(req, res) {
     }
 }
 
+
+/**
+ * Permet la suppression en BD de l'annonce dont l'ID est envoyé
+ * @Conditions :
+ *  - l'ID doit correspondre à une annonce existante
+ *  - l'utilisateur actuellement connecté doit être le créateur de cette annonce
+ */
 async function deleteAnnonce(req, res) {
     try {
         const annonce_id  = req.params.id;
@@ -366,6 +402,14 @@ async function deleteAnnonce(req, res) {
     }
 }
 
+
+/**
+ * Permet la modification uniquement du statut d'une annonce, entre "DRAFT" ou "PUBLISHED"
+ * @Conditions :
+ *  - l'ID envoyé doit correspondre à une annonce existante
+ *  - l'utilisateur actuellement connecté doit être le créateur de cette annonce
+ *  - Le nouveau statut doit être "DRAFT" ou "PUBLISHED"
+ */
 async function changeAnnonceStatus(req, res) {
     try {
         const annonce_id = req.params.id;
@@ -389,7 +433,6 @@ async function changeAnnonceStatus(req, res) {
         }
 
         const {status} = req.body;
-
 
         if (!(status.localeCompare("DRAFT") === 0 || status.localeCompare("PUBLISHED") === 0)) {
             return res.status(400).json({
@@ -417,6 +460,10 @@ async function changeAnnonceStatus(req, res) {
     }
 }
 
+
+/**
+ * Renvoie d'une liste fixe des catégories possibles pour la création d'une annonce.
+ */
 async function getCategoriesPossible(req, res) {
     try {
         return res.status(201).json({
