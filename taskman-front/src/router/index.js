@@ -22,7 +22,7 @@ const routes = [
     { path: '/annonces/:id', component: AnnonceDetailView },
 
     { path: '/profile', component: ProfileView, meta: { requiresAuth: true } },
-    { path: '/users/:id', component: UserDetailView, meta: { requiresAuth: true } },
+    { path: '/users/:id', component: UserDetailView },
     { path: '/profile/edit', component: EditProfileView, meta: { requiresAuth: true } },
     { path: '/favorites', component: FavoritesView, meta: { requiresAuth: true } },
     { path: '/conversations', component: ConversationsView, meta: { requiresAuth: true } },

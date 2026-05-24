@@ -67,10 +67,10 @@ app.get("/", (req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/annonces', annoncesRoutes);
+app.use('/users', userRoutes);
 
 /* routes protégées */
 app.use(protect);
-app.use('/users', userRoutes);
 app.use('/favoris', favorisRoutes);
 app.use('/conversations', conversationsRoutes);
 
